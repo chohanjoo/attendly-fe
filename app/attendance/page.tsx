@@ -88,7 +88,7 @@ export default function AttendancePage() {
   return (
     <AuthLayout>
       <AppShellLayout>
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-4xl mx-auto">
           <div>
             <h1 className="text-3xl font-bold">출석 입력</h1>
             <p className="text-gray-500 mt-1">GBS 모임 참석자의 출석 상태를 기록하세요.</p>
