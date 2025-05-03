@@ -1,0 +1,149 @@
+"use client";
+
+import { useState } from "react";
+import { AttendanceItemRequest } from "@/types/attendance";
+import { formatDate } from "@/lib/attendance-utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Save, X, AlertCircle } from "lucide-react";
+
+interface AttendanceInputModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  weekStart: string;
+  attendanceInputs: AttendanceItemRequest[];
+  memberNames: Record<number, string>;
+  onInputChange: (index: number, field: keyof AttendanceItemRequest, value: any) => void;
+  onToggleWorship: (index: number) => void;
+  onSave: () => void;
+  isPending: boolean;
+}
+
+export default function AttendanceInputModal({
+  open,
+  onOpenChange,
+  weekStart,
+  attendanceInputs,
+  memberNames,
+  onInputChange,
+  onToggleWorship,
+  onSave,
+  isPending
+}: AttendanceInputModalProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>GBS 출석 입력</DialogTitle>
+          <DialogDescription>
+            {formatDate(weekStart)} 주간의 GBS 출석 정보를 입력하세요.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {attendanceInputs.map((input, index) => {
+            const memberName = memberNames[input.memberId] || `조원 ${index + 1}`;
+            
+            return (
+              <div key={index} className="grid grid-cols-12 gap-4 items-center border-b pb-4">
+                <div className="col-span-3">
+                  <Label>이름</Label>
+                  <p className="font-medium mt-1">{memberName}</p>
+                </div>
+                
+                <div className="col-span-3">
+                  <Label htmlFor={`worship-${index}`}>예배 출석</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Switch
+                      id={`worship-${index}`}
+                      checked={input.worship === 'O'}
+                      onCheckedChange={() => onToggleWorship(index)}
+                    />
+                    <Badge variant={input.worship === 'O' ? "default" : "destructive"}>
+                      {input.worship}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="col-span-3">
+                  <Label htmlFor={`qt-${index}`}>QT 횟수</Label>
+                  <Input
+                    id={`qt-${index}`}
+                    type="number"
+                    min={0}
+                    max={6}
+                    value={input.qtCount}
+                    onChange={(e) => onInputChange(index, 'qtCount', parseInt(e.target.value) || 0)}
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div className="col-span-3">
+                  <Label htmlFor={`ministry-${index}`}>대학부 등급</Label>
+                  <Select
+                    value={input.ministry}
+                    onValueChange={(value) => onInputChange(index, 'ministry', value as 'A' | 'B' | 'C')}
+                  >
+                    <SelectTrigger id={`ministry-${index}`} className="mt-1">
+                      <SelectValue placeholder="등급 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A">A</SelectItem>
+                      <SelectItem value="B">B</SelectItem>
+                      <SelectItem value="C">C</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            );
+          })}
+
+          {attendanceInputs.length === 0 && (
+            <div className="flex items-center justify-center py-8 text-gray-500">
+              <AlertCircle className="mr-2 h-5 w-5" />
+              <p>조원 정보를 불러올 수 없습니다.</p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <X className="mr-2 h-4 w-4" />
+            취소
+          </Button>
+          <Button 
+            onClick={onSave} 
+            disabled={isPending || attendanceInputs.length === 0}
+          >
+            {isPending ? (
+              <>저장 중...</>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                저장하기
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+} 
