@@ -6,7 +6,7 @@ import { AuthLayout } from "@/components/layouts/auth-layout";
 import { AppShellLayout } from "@/components/layouts/app-shell-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarCheck2, Calendar, Save, X, Check, AlertCircle } from "lucide-react";
+import { CalendarCheck2, Calendar, Save, X, Check, AlertCircle, Users } from "lucide-react";
 import logger from "@/lib/logger";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
@@ -79,6 +79,24 @@ interface LeaderGbsResponse {
   startDate: string;
 }
 
+// GBS 멤버 응답 타입 정의
+interface GbsMemberResponse {
+  id: number;
+  name: string;
+  email?: string;
+  birthDate?: string;
+  joinDate: string;
+  phoneNumber?: string;
+}
+
+// GBS 멤버 목록 응답 타입 정의
+interface GbsMembersListResponse {
+  gbsId: number;
+  gbsName: string;
+  memberCount: number;
+  members: GbsMemberResponse[];
+}
+
 // 주간 시작일을 계산하는 함수 (일요일 기준)
 function getWeekStart(): string {
   const now = new Date();
@@ -121,6 +139,16 @@ export default function AttendancePage() {
       return response.data as LeaderGbsResponse;
     },
     enabled: !!user
+  });
+
+  // GBS 멤버 목록 조회
+  const { data: gbsMembers, isLoading: isMembersLoading, error: membersError } = useQuery({
+    queryKey: ['gbsMembers', gbsId],
+    queryFn: async () => {
+      const response = await api.get(`/api/v1/gbs-members/${gbsId}`);
+      return response.data as GbsMembersListResponse;
+    },
+    enabled: !!gbsId
   });
 
   // gbsId 설정
@@ -258,6 +286,58 @@ export default function AttendancePage() {
                 <p className="text-sm">현재 선택된 주간: {formatDate(weekStart)}</p>
                 {/* 여기에 주간 선택 컴포넌트를 추가할 수 있습니다 */}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="h-5 w-5 text-indigo-500" />
+                GBS 멤버 목록
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isMembersLoading ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              ) : membersError ? (
+                <div className="text-red-500 py-4">
+                  GBS 멤버 정보를 불러오는 중 오류가 발생했습니다.
+                </div>
+              ) : gbsMembers && gbsMembers.members.length > 0 ? (
+                <>
+                  <Table>
+                    <TableCaption>{gbsMembers.gbsName} 멤버 목록 (총 {gbsMembers.memberCount}명)</TableCaption>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>이름</TableHead>
+                        <TableHead>이메일</TableHead>
+                        <TableHead>생년월일</TableHead>
+                        <TableHead>가입일</TableHead>
+                        <TableHead>연락처</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {gbsMembers.members.map((member) => (
+                        <TableRow key={member.id}>
+                          <TableCell className="font-medium">{member.name}</TableCell>
+                          <TableCell>{member.email || '-'}</TableCell>
+                          <TableCell>{member.birthDate ? formatDate(member.birthDate) : '-'}</TableCell>
+                          <TableCell>{formatDate(member.joinDate)}</TableCell>
+                          <TableCell>{member.phoneNumber || '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
+              ) : (
+                <div className="text-gray-500 py-8 text-center">
+                  <p className="mb-4">현재 GBS에 등록된 멤버가 없습니다.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
