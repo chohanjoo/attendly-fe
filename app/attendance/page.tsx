@@ -241,7 +241,7 @@ export default function AttendancePage() {
 
   // 출석 입력 시작하기
   const handleStartAttendanceInput = () => {
-    // 기존 데이터가 있으면 그대로 사용, 없으면 빈 템플릿 생성
+    // 기존 데이터가 있으면 그대로 사용, 없으면 GBS 멤버 데이터로 초기화
     const initialInputs = attendances && attendances.length > 0
       ? attendances.map(att => ({
           memberId: att.memberId,
@@ -249,12 +249,12 @@ export default function AttendancePage() {
           qtCount: att.qtCount,
           ministry: att.ministry
         }))
-      : [
-          // 실제 환경에서는 API로부터 GBS 멤버 목록을 가져와야 함
-          { memberId: 1, worship: 'O' as 'O', qtCount: 0, ministry: 'A' as 'A' },
-          { memberId: 2, worship: 'O' as 'O', qtCount: 0, ministry: 'A' as 'A' },
-          { memberId: 3, worship: 'O' as 'O', qtCount: 0, ministry: 'A' as 'A' }
-        ];
+      : gbsMembers?.members.map(member => ({
+          memberId: member.id,
+          worship: 'X' as 'O' | 'X',
+          qtCount: 0,
+          ministry: 'A' as 'A' | 'B' | 'C'
+        })) || [];
     
     setAttendanceInputs(initialInputs);
     setOpenModal(true);
@@ -502,16 +502,26 @@ export default function AttendancePage() {
                         </TableBody>
                       </Table>
                       <div className="mt-4">
-                        <Button className="w-full" onClick={handleStartAttendanceInput}>
-                          출석 정보 수정하기
+                        <Button 
+                          className="w-full" 
+                          onClick={handleStartAttendanceInput}
+                          disabled={isMembersLoading || !gbsMembers || gbsMembers.memberCount === 0}
+                        >
+                          {isMembersLoading ? '멤버 정보 로딩 중...' : 
+                          !gbsMembers || gbsMembers.memberCount === 0 ? 'GBS 멤버가 없습니다' : '출석 정보 수정하기'}
                         </Button>
                       </div>
                     </>
                   ) : (
                     <div className="text-gray-500 py-8 text-center">
                       <p className="mb-4">현재 주간에 등록된 출석 데이터가 없습니다.</p>
-                      <Button className="w-full" onClick={handleStartAttendanceInput}>
-                        출석 입력 시작하기
+                      <Button 
+                        className="w-full" 
+                        onClick={handleStartAttendanceInput} 
+                        disabled={isMembersLoading || !gbsMembers || gbsMembers.memberCount === 0}
+                      >
+                        {isMembersLoading ? '멤버 정보 로딩 중...' : 
+                         !gbsMembers || gbsMembers.memberCount === 0 ? 'GBS 멤버가 없습니다' : '출석 입력 시작하기'}
                       </Button>
                     </div>
                   )}
@@ -611,8 +621,10 @@ export default function AttendancePage() {
 
             <div className="space-y-6 py-4">
               {attendanceInputs.map((input, index) => {
-                // 실제 환경에서는 attendances에서 멤버 이름을 가져와야 함
-                const memberName = attendances?.find(a => a.memberId === input.memberId)?.memberName || `조원 ${index + 1}`;
+                // attendances 또는 gbsMembers에서 멤버 이름 찾기
+                const memberName = attendances?.find(a => a.memberId === input.memberId)?.memberName || 
+                                  gbsMembers?.members.find(m => m.id === input.memberId)?.name || 
+                                  `조원 ${index + 1}`;
                 
                 return (
                   <div key={index} className="grid grid-cols-12 gap-4 items-center border-b pb-4">
