@@ -6,11 +6,11 @@ import { AuthLayout } from "@/components/layouts/auth-layout";
 import { AppShellLayout } from "@/components/layouts/app-shell-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarCheck2, Calendar, Save, X, Check, AlertCircle, Users } from "lucide-react";
+import { CalendarCheck2, Calendar, Save, X, Check, AlertCircle, Users, ListFilter } from "lucide-react";
 import logger from "@/lib/logger";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachWeekOfInterval, addDays } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
   Table,
@@ -42,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // 출석 데이터 타입 정의
 interface AttendanceResponse {
@@ -116,12 +117,27 @@ function getMinistryBadgeVariant(grade: string) {
   }
 }
 
+// 이번달 출석 통계 타입 정의
+interface MonthlyAttendance {
+  memberId: number;
+  memberName: string;
+  attendances: {
+    weekStart: string;
+    worship: 'O' | 'X';
+    qtCount: number;
+    ministry: 'A' | 'B' | 'C';
+  }[];
+}
+
 export default function AttendancePage() {
   const { user } = useAuth();
   const [gbsId, setGbsId] = useState<number | null>(null);
   const [weekStart, setWeekStart] = useState<string>(getWeekStart());
   const [openModal, setOpenModal] = useState(false);
   const [attendanceInputs, setAttendanceInputs] = useState<AttendanceItemRequest[]>([]);
+  const [activeTab, setActiveTab] = useState("weekly");
+  const [monthlyData, setMonthlyData] = useState<MonthlyAttendance[]>([]);
+  const [isMonthlyLoading, setIsMonthlyLoading] = useState(false);
   const queryClient = useQueryClient();
   
   // 출석 페이지 접근 로깅
@@ -265,6 +281,94 @@ export default function AttendancePage() {
     return format(new Date(dateString), 'yyyy년 MM월 dd일', { locale: ko });
   };
 
+  // 이번달 주차 배열 생성
+  const getCurrentMonthWeeks = () => {
+    const today = new Date();
+    const monthStart = startOfMonth(today);
+    const monthEnd = endOfMonth(today);
+    
+    return eachWeekOfInterval(
+      { start: monthStart, end: monthEnd },
+      { weekStartsOn: 0 } // 0: 일요일부터 시작
+    ).map(date => format(date, 'yyyy-MM-dd'));
+  };
+
+  // 이번달 출석 데이터 조회
+  const fetchMonthlyAttendance = async () => {
+    if (!gbsId) return;
+    
+    setIsMonthlyLoading(true);
+    try {
+      const weekStarts = getCurrentMonthWeeks();
+      const allAttendances: AttendanceResponse[][] = [];
+      
+      // 각 주차별 출석 데이터 조회
+      for (const week of weekStarts) {
+        try {
+          const response = await api.get('/api/attendance', {
+            params: { gbsId, weekStart: week }
+          });
+          allAttendances.push(response.data);
+        } catch (error) {
+          // 데이터가 없는 주차는 빈 배열로 처리
+          allAttendances.push([]);
+        }
+      }
+      
+      // 조원별로 데이터 재구성
+      if (allAttendances.some(week => week.length > 0)) {
+        const memberIds = new Set<number>();
+        const memberNames = new Map<number, string>();
+        
+        // 모든 멤버 ID와 이름 수집
+        allAttendances.forEach(week => {
+          week.forEach(attendance => {
+            memberIds.add(attendance.memberId);
+            memberNames.set(attendance.memberId, attendance.memberName);
+          });
+        });
+        
+        // 월간 출석 데이터 구성
+        const monthly: MonthlyAttendance[] = Array.from(memberIds).map(memberId => {
+          const attendances = weekStarts.map(week => {
+            const weekData = allAttendances.find(
+              attendances => attendances.find(a => a.weekStart === week && a.memberId === memberId)
+            );
+            
+            const attendance = weekData?.find(a => a.memberId === memberId);
+            
+            return {
+              weekStart: week,
+              worship: attendance?.worship || 'X',
+              qtCount: attendance?.qtCount || 0,
+              ministry: attendance?.ministry || 'C'
+            };
+          });
+          
+          return {
+            memberId,
+            memberName: memberNames.get(memberId) || `멤버 ${memberId}`,
+            attendances
+          };
+        });
+        
+        setMonthlyData(monthly);
+      }
+    } catch (error) {
+      console.error("월간 출석 데이터 조회 중 오류가 발생했습니다:", error);
+      toast.error("월간 출석 데이터를 불러오는데 실패했습니다.");
+    } finally {
+      setIsMonthlyLoading(false);
+    }
+  };
+
+  // 월간 탭 클릭 시 데이터 로드
+  useEffect(() => {
+    if (activeTab === "monthly" && gbsId) {
+      fetchMonthlyAttendance();
+    }
+  }, [activeTab, gbsId]);
+
   return (
     <AuthLayout>
       <AppShellLayout>
@@ -349,61 +453,148 @@ export default function AttendancePage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              ) : error ? (
-                <div className="text-red-500 py-4">
-                  출석 데이터를 불러오는 중 오류가 발생했습니다.
-                </div>
-              ) : attendances && attendances.length > 0 ? (
-                <>
-                  <Table>
-                    <TableCaption>주간 GBS 출석 현황</TableCaption>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>이름</TableHead>
-                        <TableHead>예배 출석</TableHead>
-                        <TableHead>QT 횟수</TableHead>
-                        <TableHead>대학부 등급</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {attendances.map((attendance) => (
-                        <TableRow key={attendance.id}>
-                          <TableCell className="font-medium">{attendance.memberName}</TableCell>
-                          <TableCell>
-                            <Badge variant={attendance.worship === 'O' ? "default" : "destructive"}>
-                              {attendance.worship}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{attendance.qtCount}/6</TableCell>
-                          <TableCell>
-                            <Badge variant={getMinistryBadgeVariant(attendance.ministry)}>
-                              {attendance.ministry}
-                            </Badge>
-                          </TableCell>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="weekly">주간 출석</TabsTrigger>
+                  <TabsTrigger value="monthly">이번달 출석</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="weekly">
+                  {isLoading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  ) : error ? (
+                    <div className="text-red-500 py-4">
+                      출석 데이터를 불러오는 중 오류가 발생했습니다.
+                    </div>
+                  ) : attendances && attendances.length > 0 ? (
+                    <>
+                      <Table>
+                        <TableCaption>주간 GBS 출석 현황</TableCaption>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>이름</TableHead>
+                            <TableHead>예배 출석</TableHead>
+                            <TableHead>QT 횟수</TableHead>
+                            <TableHead>대학부 등급</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {attendances.map((attendance) => (
+                            <TableRow key={attendance.id}>
+                              <TableCell className="font-medium">{attendance.memberName}</TableCell>
+                              <TableCell>
+                                <Badge variant={attendance.worship === 'O' ? "default" : "destructive"}>
+                                  {attendance.worship}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{attendance.qtCount}/6</TableCell>
+                              <TableCell>
+                                <Badge variant={getMinistryBadgeVariant(attendance.ministry)}>
+                                  {attendance.ministry}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      <div className="mt-4">
+                        <Button className="w-full" onClick={handleStartAttendanceInput}>
+                          출석 정보 수정하기
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-gray-500 py-8 text-center">
+                      <p className="mb-4">현재 주간에 등록된 출석 데이터가 없습니다.</p>
+                      <Button className="w-full" onClick={handleStartAttendanceInput}>
+                        출석 입력 시작하기
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="monthly">
+                  {isMonthlyLoading ? (
+                    <div className="space-y-2">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  ) : monthlyData.length > 0 ? (
+                    <Table>
+                      <TableCaption>
+                        이번달 GBS 출석 현황 ({format(startOfMonth(new Date()), 'yyyy년 MM월', { locale: ko })})
+                      </TableCaption>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">이름</TableHead>
+                          {getCurrentMonthWeeks().map((week, index) => (
+                            <TableHead key={week} className="text-center">
+                              {index+1}주차<br/>
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(week), 'MM/dd', { locale: ko })}
+                              </span>
+                            </TableHead>
+                          ))}
+                          <TableHead className="text-center">출석률</TableHead>
+                          <TableHead className="text-center">평균 QT</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <div className="mt-4">
-                    <Button className="w-full" onClick={handleStartAttendanceInput}>
-                      출석 정보 수정하기
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-gray-500 py-8 text-center">
-                  <p className="mb-4">현재 주간에 등록된 출석 데이터가 없습니다.</p>
-                  <Button className="w-full" onClick={handleStartAttendanceInput}>
-                    출석 입력 시작하기
-                  </Button>
-                </div>
-              )}
+                      </TableHeader>
+                      <TableBody>
+                        {monthlyData.map((member) => {
+                          // 출석률 계산
+                          const attendedWeeks = member.attendances.filter(a => a.worship === 'O').length;
+                          const totalWeeks = member.attendances.length;
+                          const attendanceRate = totalWeeks > 0 ? (attendedWeeks / totalWeeks) * 100 : 0;
+                          
+                          // 평균 QT 횟수 계산
+                          const totalQtCount = member.attendances.reduce((sum, a) => sum + a.qtCount, 0);
+                          const averageQt = totalWeeks > 0 ? totalQtCount / totalWeeks : 0;
+                          
+                          return (
+                            <TableRow key={member.memberId}>
+                              <TableCell className="font-medium">{member.memberName}</TableCell>
+                              
+                              {member.attendances.map(attendance => (
+                                <TableCell key={`${member.memberId}-${attendance.weekStart}`} className="text-center">
+                                  <div className="flex flex-col items-center gap-1">
+                                    <Badge variant={attendance.worship === 'O' ? "default" : "destructive"}>
+                                      {attendance.worship}
+                                    </Badge>
+                                    <div className="text-xs">QT: {attendance.qtCount}</div>
+                                  </div>
+                                </TableCell>
+                              ))}
+                              
+                              <TableCell className="text-center">
+                                <Badge variant={attendanceRate >= 75 ? "default" : attendanceRate >= 50 ? "secondary" : "destructive"}>
+                                  {attendanceRate.toFixed(0)}%
+                                </Badge>
+                              </TableCell>
+                              
+                              <TableCell className="text-center">
+                                {averageQt.toFixed(1)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-gray-500 py-8 text-center">
+                      <p className="mb-4">이번달 출석 데이터가 없습니다.</p>
+                      <Button className="w-full" onClick={fetchMonthlyAttendance}>
+                        <ListFilter className="mr-2 h-4 w-4" />
+                        이번달 출석 데이터 조회하기
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </div>
