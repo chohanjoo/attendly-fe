@@ -305,4 +305,3 @@ docker run -e NEXT_PUBLIC_API_URL=https://api.attendly-church.com my-nextjs-app
 
 환경별 프로필 설정은 효율적인 개발 워크플로우와 안정적인 배포를 위해 중요합니다. 위 가이드를 따라 프로젝트에 적합한 환경 설정을 구성하고, 항상 보안 모범 사례를 준수하세요.
 
-Attendly 프로젝트 팀 
