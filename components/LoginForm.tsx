@@ -28,15 +28,36 @@ export default function LoginForm() {
     setError(null);
 
     try {
+      console.log("로그인 시도:", credentials.email);
       await login(credentials.email, credentials.password);
-      // 로그인 성공 시 메인 페이지로 이동
-      router.push('/');
+      console.log("로그인 성공, 홈페이지로 리다이렉트 시도");
+      
+      // 리다이렉트 시작 - 즉시 리다이렉트 실행
+      handleRedirect();
     } catch (err: any) {
       setError(err.message || '로그인 중 오류가 발생했습니다.');
       console.error('Login error:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // 리다이렉트 처리 함수를 분리하여 관리
+  const handleRedirect = () => {
+    console.log("리다이렉트 실행");
+    
+    // 먼저 window.location으로 직접 이동 (가장 강력한 방법)
+    window.location.href = '/';
+    
+    // 만약 위 방법이 작동하지 않을 경우를 대비한 백업 옵션들
+    setTimeout(() => {
+      console.log("1차 리다이렉트 실패, 추가 시도");
+      // replace 사용 - 히스토리 스택에 추가하지 않음
+      window.location.replace('/');
+      
+      // Next.js 라우터도 시도
+      router.replace('/');
+    }, 500);
   };
 
   return (

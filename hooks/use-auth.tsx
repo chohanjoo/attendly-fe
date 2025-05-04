@@ -23,7 +23,7 @@ export interface User {
 // 인증 컨텍스트 타입 정의
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => void;
   isLoading: boolean;
   error: string | null;
@@ -137,6 +137,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // 사용자 정보 설정
       setUser(userData);
+      
+      // 로그인 성공 처리 완료
+      console.log("인증 상태 설정 완료, 데이터 반환");
       
       return userData;
     } catch (err: any) {

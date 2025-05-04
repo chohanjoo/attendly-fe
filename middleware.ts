@@ -21,9 +21,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // 현재 토큰 가져오기
-  const hasToken = request.cookies.has('accessToken');
-  console.log(`[미들웨어] 경로: ${pathname}, 토큰 있음: ${hasToken}`);
+  // 현재 토큰 가져오기 - accessToken 또는 refreshToken 중 하나라도 있으면 인증됨으로 간주
+  const hasAccessToken = request.cookies.has('accessToken');
+  const hasRefreshToken = request.cookies.has('refreshToken');
+  const hasToken = hasAccessToken || hasRefreshToken;
+  
+  console.log(`[미들웨어] 경로: ${pathname}`);
+  console.log(`[미들웨어] 토큰 상태: accessToken=${hasAccessToken}, refreshToken=${hasRefreshToken}`);
   
   // public 경로에 대한 완전 일치 검사
   const isPublicPath = publicPaths.includes(pathname) || 
@@ -33,16 +37,25 @@ export function middleware(request: NextRequest) {
   // 1. 인증이 필요 없는 페이지에 접근했는데 이미 로그인 상태라면 메인으로 리디렉트
   if (isPublicPath && hasToken) {
     console.log(`[미들웨어] 로그인된 상태로 퍼블릭 경로 접근. 메인으로 리다이렉트`);
-    return NextResponse.redirect(new URL('/', request.url));
+    // 강제 리다이렉트 - 캐시 방지를 위한 헤더 추가
+    const response = NextResponse.redirect(new URL('/', request.url));
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+    return response;
   }
   
   // 2. 인증이 필요한 페이지에 접근했는데 로그인 상태가 아니라면 로그인 페이지로 리디렉트
   if (!isPublicPath && !hasToken) {
     console.log(`[미들웨어] 비로그인 상태로 보호된 경로 접근. 로그인 페이지로 리다이렉트`);
-    return NextResponse.redirect(new URL('/login', request.url));
+    // 강제 리다이렉트 - 캐시 방지를 위한 헤더 추가
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+    return response;
   }
   
-  return NextResponse.next();
+  // 기본 응답에도 캐시 관련 헤더 추가
+  const response = NextResponse.next();
+  response.headers.set('Cache-Control', 'no-store, max-age=0');
+  return response;
 }
 
 // 미들웨어가 적용될 경로 설정
