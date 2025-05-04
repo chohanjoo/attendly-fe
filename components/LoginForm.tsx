@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login, LoginCredentials } from '@/lib/auth';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function LoginForm() {
   const router = useRouter();
-  const [credentials, setCredentials] = useState<LoginCredentials>({
+  const { login } = useAuth();
+  const [credentials, setCredentials] = useState({
     email: '',
     password: ''
   });
@@ -27,17 +28,12 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      const result = await login(credentials);
-      
-      if (result.success) {
-        // 로그인 성공 시 메인 페이지로 이동
-        router.push('/');
-      } else {
-        setError(result.error);
-      }
-    } catch (error) {
-      setError('로그인 중 오류가 발생했습니다.');
-      console.error('Login error:', error);
+      await login(credentials.email, credentials.password);
+      // 로그인 성공 시 메인 페이지로 이동
+      router.push('/');
+    } catch (err: any) {
+      setError(err.message || '로그인 중 오류가 발생했습니다.');
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }

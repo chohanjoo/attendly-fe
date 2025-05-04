@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
+import { saveTokens, isClientSide } from "@/lib/auth";
 
 // 사용자 타입 정의
 export interface User {
@@ -100,18 +101,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("로그인 성공:", userData);
       
       // 토큰 저장
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-      
-      // js-cookie를 통해 쿠키 설정
-      const cookies = await import('js-cookie').then(mod => mod.default);
-      cookies.set('accessToken', accessToken, { 
-        expires: 1, 
-        path: '/',
-        sameSite: 'strict' 
-      });
-      
-      console.log("쿠키 설정 후 확인:", document.cookie.includes('accessToken') ? "쿠키 있음" : "쿠키 없음");
+      saveTokens(accessToken, refreshToken);
       
       // 사용자 정보 설정
       setUser(userData);
@@ -130,6 +120,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 로그아웃 함수
   const logout = () => {
     console.log("로그아웃 실행");
+    
+    if (!isClientSide()) return;
     
     // 로컬 스토리지에서 토큰 제거
     localStorage.removeItem("accessToken");
