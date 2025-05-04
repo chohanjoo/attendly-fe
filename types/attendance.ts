@@ -52,6 +52,27 @@ export interface GbsMembersListResponse {
   members: GbsMemberResponse[];
 }
 
+// 리더 GBS 히스토리 응답 타입 정의
+export interface LeaderGbsHistoryResponse {
+  historyId: number;
+  gbsId: number;
+  gbsName: string;
+  villageId: number;
+  villageName: string;
+  startDate: string;
+  endDate?: string;
+  isActive: boolean;
+  members: GbsMemberResponse[];
+}
+
+// 리더 GBS 히스토리 리스트 응답 타입 정의
+export interface LeaderGbsHistoryListResponse {
+  leaderId: number;
+  leaderName: string;
+  historyCount: number;
+  histories: LeaderGbsHistoryResponse[];
+}
+
 // 이번달 출석 통계 타입 정의
 export interface MonthlyAttendance {
   memberId: number;

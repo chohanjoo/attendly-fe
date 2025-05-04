@@ -5,7 +5,8 @@ import {
   AttendanceResponse, 
   AttendanceBatchRequest, 
   LeaderGbsResponse,
-  GbsMembersListResponse
+  GbsMembersListResponse,
+  LeaderGbsHistoryListResponse
 } from "@/types/attendance";
 
 // 리더의 GBS 정보 조회 훅
@@ -79,5 +80,17 @@ export const useSaveAttendance = () => {
         toast.error(error.response?.data?.message || "출석 데이터 저장에 실패했습니다.");
       }
     }
+  });
+};
+
+// 리더의 GBS 히스토리 조회 훅
+export const useLeaderGbsHistory = (leaderId: number | null) => {
+  return useQuery({
+    queryKey: ['leaderGbsHistory', leaderId],
+    queryFn: async () => {
+      const response = await api.get(`/api/v1/gbs-members/leaders/${leaderId}/history`);
+      return response.data as LeaderGbsHistoryListResponse;
+    },
+    enabled: !!leaderId
   });
 }; 
