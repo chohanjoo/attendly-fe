@@ -43,72 +43,134 @@ const formatLog = (obj: any) => {
   }
 };
 
-// API 요청/응답 로깅 함수
+// API 요청 로깅 함수
 const logRequest = (config: InternalAxiosRequestConfig) => {
-  if (shouldLog()) {
-    const method = config.method?.toUpperCase() || 'UNKNOWN';
-    const url = config.url || 'UNKNOWN';
-    const timestamp = new Date().toISOString();
-    
-    console.group(`🚀 API 요청 [${timestamp}] ${method} ${url}`);
-    console.log(`URL: ${config.baseURL}${url}`);
-    console.log('Headers:', formatLog(sanitizeHeaders(config.headers)));
-    
-    if (config.params) {
-      console.log('Query Params:', formatLog(config.params));
-    }
-    
-    if (config.data) {
-      console.log('Request Body:', formatLog(config.data));
-    }
-    
-    console.groupEnd();
+  if (!shouldLog()) return config;
+  
+  const method = config.method?.toUpperCase() || 'UNKNOWN';
+  const url = config.url || 'UNKNOWN';
+  const timestamp = new Date().toISOString();
+  
+  console.group(`🚀 API 요청 [${timestamp}] ${method} ${url}`);
+  console.log(`URL: ${config.baseURL}${url}`);
+  console.log('Headers:', formatLog(sanitizeHeaders(config.headers)));
+  
+  if (config.params) {
+    console.log('Query Params:', formatLog(config.params));
   }
+  
+  if (config.data) {
+    console.log('Request Body:', formatLog(config.data));
+  }
+  
+  console.groupEnd();
   return config;
 };
 
+// API 응답 로깅 함수
 const logResponse = (response: AxiosResponse) => {
-  if (shouldLog()) {
-    const method = response.config.method?.toUpperCase() || 'UNKNOWN';
-    const url = response.config.url || 'UNKNOWN';
-    const timestamp = new Date().toISOString();
-    const duration = response.headers['x-response-time'] || 'unknown';
-    
-    console.group(`✅ API 응답 [${timestamp}] ${method} ${url} - ${response.status}`);
-    console.log(`Status: ${response.status} ${response.statusText}`);
-    console.log(`Duration: ${duration}`);
-    
-    if (response.data) {
-      console.log('Response Data:', formatLog(response.data));
-    }
-    
-    console.groupEnd();
+  if (!shouldLog()) return response;
+  
+  const method = response.config.method?.toUpperCase() || 'UNKNOWN';
+  const url = response.config.url || 'UNKNOWN';
+  const timestamp = new Date().toISOString();
+  const duration = response.headers['x-response-time'] || 'unknown';
+  
+  console.group(`✅ API 응답 [${timestamp}] ${method} ${url} - ${response.status}`);
+  console.log(`Status: ${response.status} ${response.statusText}`);
+  console.log(`Duration: ${duration}`);
+  
+  if (response.data) {
+    console.log('Response Data:', formatLog(response.data));
   }
+  
+  console.groupEnd();
   return response;
 };
 
+// API 에러 로깅 함수
 const logError = (error: any) => {
-  if (shouldLog()) {
-    const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
-    const url = error.config?.url || 'UNKNOWN';
-    const timestamp = new Date().toISOString();
+  if (!shouldLog()) return Promise.reject(error);
+  
+  const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
+  const url = error.config?.url || 'UNKNOWN';
+  const timestamp = new Date().toISOString();
+  
+  console.group(`❌ API 에러 [${timestamp}] ${method} ${url}`);
+  
+  if (error.response) {
+    console.log(`Status: ${error.response.status} ${error.response.statusText}`);
+    console.log('Response Data:', formatLog(error.response.data));
+  } else if (error.request) {
+    console.log('요청은 전송되었지만 응답이 없습니다.');
+    console.log('Request:', error.request);
+  } else {
+    console.log('Error Message:', error.message);
+  }
+  
+  console.log('Error Config:', error.config);
+  console.groupEnd();
+  return Promise.reject(error);
+};
+
+// 토큰 리프레시 처리 함수
+const refreshAuthToken = async (refreshToken: string) => {
+  const response = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+  return response.data;
+};
+
+// 새 토큰 저장 및 알림 함수
+const saveTokensAndNotify = (accessToken: string, newRefreshToken?: string) => {
+  localStorage.setItem('accessToken', accessToken);
+  
+  if (newRefreshToken) {
+    localStorage.setItem('refreshToken', newRefreshToken);
+  }
+  
+  if (isClientSide() && window.dispatchEvent) {
+    const event = new CustomEvent('token-refreshed', {
+      detail: { message: '인증이 갱신되었습니다.' }
+    });
+    window.dispatchEvent(event);
+  }
+};
+
+// 로그아웃 처리 함수
+const handleLogout = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  window.location.href = '/login';
+};
+
+// 토큰 만료 처리 및 재요청 함수
+const handleTokenExpiration = async (error: any) => {
+  const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+  
+  if (error.response?.status !== 401 || originalRequest._retry) {
+    return Promise.reject(error);
+  }
+  
+  originalRequest._retry = true;
+  
+  try {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) throw new Error('Refresh token not found');
     
-    console.group(`❌ API 에러 [${timestamp}] ${method} ${url}`);
+    const { accessToken, refreshToken: newRefreshToken } = await refreshAuthToken(refreshToken);
+    saveTokensAndNotify(accessToken, newRefreshToken);
     
-    if (error.response) {
-      console.log(`Status: ${error.response.status} ${error.response.statusText}`);
-      console.log('Response Data:', formatLog(error.response.data));
-    } else if (error.request) {
-      console.log('요청은 전송되었지만 응답이 없습니다.');
-      console.log('Request:', error.request);
+    // 원래 요청에 새 토큰 적용
+    if (originalRequest.headers) {
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
     } else {
-      console.log('Error Message:', error.message);
+      originalRequest.headers = { Authorization: `Bearer ${accessToken}` };
     }
     
-    console.log('Error Config:', error.config);
-    console.groupEnd();
+    return axios(originalRequest);
+  } catch (refreshError) {
+    handleLogout();
+    return Promise.reject(refreshError);
   }
-  return Promise.reject(error);
 };
 
 // axios 인스턴스 생성
@@ -140,12 +202,8 @@ api.interceptors.request.use(
 
 // 응답 인터셉터 - 401 에러 처리 (토큰 만료)
 api.interceptors.response.use(
-  (response: AxiosResponse) => {
-    // 응답 로깅
-    return logResponse(response);
-  },
+  logResponse,
   async (error: any) => {
-    // 에러 로깅
     logError(error);
     
     // 서버 사이드에서는 토큰 갱신 처리를 하지 않음
@@ -153,59 +211,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
     
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    
-    // 401 에러이고 재시도하지 않은 경우
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        // refresh 토큰으로 새 엑세스 토큰 요청
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('Refresh token not found');
-        }
-        
-        // API 스펙에 맞게 토큰 갱신 요청
-        const response = await axios.post(`${baseURL}/auth/refresh`, {
-          refreshToken,
-        });
-        
-        const { accessToken, refreshToken: newRefreshToken } = response.data;
-        
-        // 새 토큰 저장
-        localStorage.setItem('accessToken', accessToken);
-        
-        // 새 리프레시 토큰이 제공된 경우 저장
-        if (newRefreshToken) {
-          localStorage.setItem('refreshToken', newRefreshToken);
-        }
-        
-        // 토스트 메시지로 사용자에게 토큰 갱신 알림
-        if (isClientSide() && window.dispatchEvent) {
-          const event = new CustomEvent('token-refreshed', {
-            detail: { message: '인증이 갱신되었습니다.' }
-          });
-          window.dispatchEvent(event);
-        }
-        
-        // 새 토큰으로 원래 요청 재시도
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        } else {
-          originalRequest.headers = { Authorization: `Bearer ${accessToken}` };
-        }
-        return axios(originalRequest);
-      } catch (refreshError) {
-        // refresh 토큰도 만료된 경우 로그아웃
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-    
-    return Promise.reject(error);
+    return handleTokenExpiration(error);
   }
 );
 
