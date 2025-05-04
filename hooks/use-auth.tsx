@@ -10,6 +10,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { saveTokens, isClientSide } from "@/lib/auth";
+import { toast } from "sonner";
 
 // 사용자 타입 정의
 export interface User {
@@ -26,6 +27,7 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   error: string | null;
+  tokenRefreshed: boolean;
 }
 
 // Auth Context 생성
@@ -41,7 +43,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [tokenRefreshed, setTokenRefreshed] = useState<boolean>(false);
   const router = useRouter();
+
+  // 토큰 갱신 이벤트 리스너 설정
+  useEffect(() => {
+    if (isClientSide()) {
+      const handleTokenRefreshed = (event: Event) => {
+        const customEvent = event as CustomEvent;
+        console.log("토큰 갱신 알림:", customEvent.detail.message);
+        
+        // 토스트 알림 표시
+        toast.success("인증이 갱신되었습니다", {
+          description: "세션이 자동으로 연장되었습니다.",
+          duration: 3000,
+        });
+        
+        setTokenRefreshed(true);
+        
+        // 3초 후 알림 상태 초기화
+        setTimeout(() => {
+          setTokenRefreshed(false);
+        }, 3000);
+      };
+      
+      window.addEventListener('token-refreshed', handleTokenRefreshed);
+      
+      return () => {
+        window.removeEventListener('token-refreshed', handleTokenRefreshed);
+      };
+    }
+  }, []);
 
   // 컴포넌트 마운트시 토큰 확인
   useEffect(() => {
@@ -151,6 +183,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     isLoading,
     error,
+    tokenRefreshed,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

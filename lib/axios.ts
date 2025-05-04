@@ -166,12 +166,28 @@ api.interceptors.response.use(
           throw new Error('Refresh token not found');
         }
         
+        // API 스펙에 맞게 토큰 갱신 요청
         const response = await axios.post(`${baseURL}/auth/refresh`, {
           refreshToken,
         });
         
-        const { accessToken } = response.data;
+        const { accessToken, refreshToken: newRefreshToken } = response.data;
+        
+        // 새 토큰 저장
         localStorage.setItem('accessToken', accessToken);
+        
+        // 새 리프레시 토큰이 제공된 경우 저장
+        if (newRefreshToken) {
+          localStorage.setItem('refreshToken', newRefreshToken);
+        }
+        
+        // 토스트 메시지로 사용자에게 토큰 갱신 알림
+        if (isClientSide() && window.dispatchEvent) {
+          const event = new CustomEvent('token-refreshed', {
+            detail: { message: '인증이 갱신되었습니다.' }
+          });
+          window.dispatchEvent(event);
+        }
         
         // 새 토큰으로 원래 요청 재시도
         if (originalRequest.headers) {
