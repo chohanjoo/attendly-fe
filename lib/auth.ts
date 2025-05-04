@@ -37,14 +37,14 @@ export const saveTokens = (accessToken: string, refreshToken: string) => {
   localStorage.setItem('refreshToken', refreshToken);
   
   // 쿠키에 저장 (미들웨어에서 인증 체크용)
-  // accessToken은 1일 만료, refreshToken은 7일 만료
+  // accessToken은 1시간 만료, refreshToken은 30일 만료
   cookies.set('accessToken', accessToken, { 
-    expires: 1, 
+    expires: 1/24, // 1시간
     path: '/',
     sameSite: 'strict'
   });
   cookies.set('refreshToken', refreshToken, { 
-    expires: 7,
+    expires: 30, // 30일
     path: '/',
     sameSite: 'strict'  
   });

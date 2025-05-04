@@ -46,6 +46,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [tokenRefreshed, setTokenRefreshed] = useState<boolean>(false);
   const router = useRouter();
 
+  // 토큰 제거 유틸리티 함수
+  const clearAuthTokens = async () => {
+    // 로컬 스토리지에서 토큰 제거
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    
+    // 쿠키에서도 토큰 제거
+    const cookies = await import('js-cookie').then(mod => mod.default);
+    cookies.remove('accessToken', { path: '/' });
+    cookies.remove('refreshToken', { path: '/' });
+  };
+
   // 토큰 갱신 이벤트 리스너 설정
   useEffect(() => {
     if (isClientSide()) {
@@ -99,15 +111,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setUser(response.data);
           } catch (apiError) {
             console.error("사용자 정보 조회 실패:", apiError);
-            // 토큰이 유효하지 않은 경우 로컬 스토리지 정리
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("refreshToken");
+            // 토큰이 유효하지 않은 경우 토큰 제거
+            clearAuthTokens();
           }
         } catch (err) {
           console.error("인증 확인 중 오류:", err);
-          // 토큰이 유효하지 않은 경우 로컬 스토리지 정리
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
+          // 토큰이 유효하지 않은 경우 토큰 제거
+          clearAuthTokens();
         } finally {
           setIsLoading(false);
         }
@@ -158,19 +168,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     if (!isClientSide()) return;
     
-    // 로컬 스토리지에서 토큰 제거
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    
-    // 쿠키에서도 토큰 제거
-    const removeCookies = async () => {
-      const cookies = await import('js-cookie').then(mod => mod.default);
-      cookies.remove('accessToken', { path: '/' });
-      cookies.remove('refreshToken', { path: '/' });
-      console.log("쿠키 삭제 완료, 확인:", document.cookie.includes('accessToken') ? "쿠키 남아있음" : "쿠키 없음");
-    };
-    
-    removeCookies();
+    // 토큰 제거
+    clearAuthTokens();
     
     // 사용자 상태 초기화
     setUser(null);
