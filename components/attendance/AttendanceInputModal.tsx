@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AttendanceItemRequest } from "@/types/attendance";
 import { formatDate } from "@/lib/attendance-utils";
 import {
@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Save, X, AlertCircle } from "lucide-react";
+import { Save, X, AlertCircle, User, UserX } from "lucide-react";
 
 interface AttendanceInputModalProps {
   open: boolean;
@@ -33,7 +33,7 @@ interface AttendanceInputModalProps {
   memberNames: Record<number, string>;
   onInputChange: (index: number, field: keyof AttendanceItemRequest, value: any) => void;
   onToggleWorship: (index: number) => void;
-  onSave: () => void;
+  onSave: (activeInputs: AttendanceItemRequest[]) => void;
   isPending: boolean;
 }
 
@@ -48,6 +48,33 @@ export default function AttendanceInputModal({
   onSave,
   isPending
 }: AttendanceInputModalProps) {
+  const [activeMemberIndices, setActiveMemberIndices] = useState<Set<number>>(
+    new Set(attendanceInputs.map((_, index) => index))
+  );
+
+  // attendanceInputs가 변경될 때마다 모든 멤버를 활성화 상태로 설정
+  useEffect(() => {
+    setActiveMemberIndices(new Set(attendanceInputs.map((_, index) => index)));
+  }, [attendanceInputs]);
+
+  const toggleMemberActive = (index: number) => {
+    const newActiveMemberIndices = new Set(activeMemberIndices);
+    if (newActiveMemberIndices.has(index)) {
+      newActiveMemberIndices.delete(index);
+    } else {
+      newActiveMemberIndices.add(index);
+    }
+    setActiveMemberIndices(newActiveMemberIndices);
+  };
+
+  const handleSave = () => {
+    // 활성화된 멤버들만 필터링
+    const activeInputs = attendanceInputs.filter((_, index) => activeMemberIndices.has(index));
+    
+    // 부모 컴포넌트의 onSave에 활성화된 멤버만 전달
+    onSave(activeInputs);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -61,12 +88,26 @@ export default function AttendanceInputModal({
         <div className="space-y-6 py-4">
           {attendanceInputs.map((input, index) => {
             const memberName = memberNames[input.memberId] || `조원 ${index + 1}`;
+            const isActive = activeMemberIndices.has(index);
             
             return (
-              <div key={index} className="grid grid-cols-12 gap-4 items-center border-b pb-4">
+              <div key={index} className={`grid grid-cols-12 gap-4 items-center border-b pb-4 ${!isActive ? 'opacity-50' : ''}`}>
                 <div className="col-span-3">
                   <Label>이름</Label>
-                  <p className="font-medium mt-1">{memberName}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="font-medium">{memberName}</p>
+                    <Switch
+                      id={`active-${index}`}
+                      checked={isActive}
+                      onCheckedChange={() => toggleMemberActive(index)}
+                      aria-label={`${memberName} 활성화`}
+                    />
+                    {isActive ? (
+                      <User className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <UserX className="h-4 w-4 text-red-500" />
+                    )}
+                  </div>
                 </div>
                 
                 <div className="col-span-3">
@@ -76,6 +117,7 @@ export default function AttendanceInputModal({
                       id={`worship-${index}`}
                       checked={input.worship === 'O'}
                       onCheckedChange={() => onToggleWorship(index)}
+                      disabled={!isActive}
                     />
                     <Badge variant={input.worship === 'O' ? "default" : "destructive"}>
                       {input.worship}
@@ -93,6 +135,7 @@ export default function AttendanceInputModal({
                     value={input.qtCount}
                     onChange={(e) => onInputChange(index, 'qtCount', parseInt(e.target.value) || 0)}
                     className="mt-1"
+                    disabled={!isActive}
                   />
                 </div>
                 
@@ -101,6 +144,7 @@ export default function AttendanceInputModal({
                   <Select
                     value={input.ministry}
                     onValueChange={(value) => onInputChange(index, 'ministry', value as 'A' | 'B' | 'C')}
+                    disabled={!isActive}
                   >
                     <SelectTrigger id={`ministry-${index}`} className="mt-1">
                       <SelectValue placeholder="등급 선택" />
@@ -130,7 +174,7 @@ export default function AttendanceInputModal({
             취소
           </Button>
           <Button 
-            onClick={onSave} 
+            onClick={handleSave} 
             disabled={isPending || attendanceInputs.length === 0}
           >
             {isPending ? (
