@@ -56,9 +56,9 @@ export default function WeeklyAttendanceTable({
           <TableHeader>
             <TableRow>
               <TableHead>이름</TableHead>
-              <TableHead>예배 출석</TableHead>
+              <TableHead>대예배</TableHead>
               <TableHead>QT 횟수</TableHead>
-              <TableHead>대학부 등급</TableHead>
+              <TableHead>대학부</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

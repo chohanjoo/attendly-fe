@@ -132,7 +132,7 @@ export default function AttendanceInputModal({
                 </div>
                 
                 <div className="col-span-3">
-                  <Label htmlFor={`worship-${index}`}>예배 출석</Label>
+                  <Label htmlFor={`worship-${index}`}>대예배</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Switch
                       id={`worship-${index}`}
@@ -161,7 +161,7 @@ export default function AttendanceInputModal({
                 </div>
                 
                 <div className="col-span-3">
-                  <Label htmlFor={`ministry-${index}`}>대학부 등급</Label>
+                  <Label htmlFor={`ministry-${index}`}>대학부</Label>
                   <Select
                     value={input.ministry}
                     onValueChange={(value) => onInputChange(index, 'ministry', value as 'A' | 'B' | 'C')}
