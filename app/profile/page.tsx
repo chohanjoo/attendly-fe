@@ -204,15 +204,11 @@ export default function ProfilePage() {
         setIsLeadersLoading(true);
         
         // 리더 목록 가져오기
-        const leadersResponse = await api.get("/api/admin/users", {
-          params: {
-            page: 0,
-            size: 100,
-            role: ["LEADER"]
-          }
+        const leadersResponse = await api.post("/api/users/by-roles", {
+          roles: ["LEADER"]
         });
         
-        const leaders = leadersResponse.data.content
+        const leaders = leadersResponse.data.users
           .filter((leader: any) => leader.id !== userDetails.id)
           .map((leader: any) => ({
             id: leader.id,
