@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppShellLayout } from "@/components/layouts/app-shell-layout";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Mail, User as UserIcon, UserCircle, Info, Shield, Users, BarChart3, History, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, Mail, User as UserIcon, UserCircle, Info, Shield, Users, BarChart3, History, ChevronDown, ChevronUp, UserPlus, Clock } from "lucide-react";
 import { 
   Tabs, 
   TabsContent, 
@@ -21,9 +21,49 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { format as dateFormat } from "date-fns";
+import { ko } from "date-fns/locale";
+import { CalendarIcon } from "@radix-ui/react-icons";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils";
 import api from "@/lib/axios";
 import logger from "@/lib/logger";
 import { useLeaderGbsHistory } from "@/hooks/use-attendance";
+import { useActiveDelegations, useCreateDelegation } from "@/hooks/use-delegation";
 
 interface UserDetails {
   id: number;
@@ -60,12 +100,34 @@ const getRoleColor = (role: string): string => {
   }
 };
 
+// 새 위임 폼 스키마 정의
+const delegationFormSchema = z.object({
+  delegateId: z.string().min(1, { message: "위임 받을 리더를 선택해주세요" }),
+  gbsGroupId: z.string().min(1, { message: "위임할 GBS를 선택해주세요" }),
+  startDate: z.date({ required_error: "시작일을 선택해주세요" }),
+  endDate: z.date({ required_error: "종료일을 선택해주세요" }),
+}).refine(data => data.startDate < data.endDate, {
+  message: "종료일은 시작일 이후여야 합니다",
+  path: ["endDate"],
+});
+
+type DelegationFormValues = z.infer<typeof delegationFormSchema>;
+
 export default function ProfilePage() {
   const { user } = useAuth();
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showHistorySection, setShowHistorySection] = useState(false);
+  const [showDelegationSection, setShowDelegationSection] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [availableLeaders, setAvailableLeaders] = useState<Array<{ id: number, name: string }>>([]);
+  const [userGbsList, setUserGbsList] = useState<Array<{ id: number, name: string }>>([]);
+  const [isLeadersLoading, setIsLeadersLoading] = useState(false);
+  
+  // 현재 위임 상태 가져오기
+  const { data: activeDelegations, isLoading: isDelegationsLoading, refetch: refetchDelegations } = 
+    useActiveDelegations(userDetails?.id || null);
   
   // 리더 히스토리 데이터 가져오기
   const { data: leaderHistory, isLoading: isHistoryLoading } = useLeaderGbsHistory(
@@ -73,7 +135,39 @@ export default function ProfilePage() {
       ? userDetails.id 
       : null
   );
+  
+  // 위임 생성 뮤테이션 훅
+  const { mutate: createDelegation, isPending: isCreatingDelegation } = useCreateDelegation();
 
+  // 위임 생성 폼
+  const form = useForm<DelegationFormValues>({
+    resolver: zodResolver(delegationFormSchema),
+    defaultValues: {
+      delegateId: "",
+      gbsGroupId: "",
+    },
+  });
+
+  // 위임 생성 제출 핸들러
+  const onSubmit = (values: DelegationFormValues) => {
+    if (!userDetails) return;
+    
+    createDelegation({
+      delegatorId: userDetails.id,
+      delegateId: parseInt(values.delegateId),
+      gbsGroupId: parseInt(values.gbsGroupId),
+      startDate: dateFormat(values.startDate, 'yyyy-MM-dd'),
+      endDate: dateFormat(values.endDate, 'yyyy-MM-dd'),
+    }, {
+      onSuccess: () => {
+        setIsDialogOpen(false);
+        form.reset();
+        refetchDelegations();
+      }
+    });
+  };
+
+  // 사용자 세부 정보 가져오기
   useEffect(() => {
     const fetchUserDetails = async () => {
       if (!user) return;
@@ -99,6 +193,54 @@ export default function ProfilePage() {
 
     fetchUserDetails();
   }, [user]);
+
+  // 리더 목록 및 GBS 목록 가져오기
+  useEffect(() => {
+    const fetchLeadersAndGbs = async () => {
+      if (!userDetails) return;
+      if (!(userDetails.role === "LEADER" || userDetails.role === "VILLAGE_LEADER" || userDetails.role === "MINISTER" || userDetails.role === "ADMIN")) return;
+
+      try {
+        setIsLeadersLoading(true);
+        
+        // 리더 목록 가져오기
+        const leadersResponse = await api.get("/api/admin/users", {
+          params: {
+            page: 0,
+            size: 100,
+            role: ["LEADER"]
+          }
+        });
+        
+        const leaders = leadersResponse.data.content
+          .filter((leader: any) => leader.id !== userDetails.id)
+          .map((leader: any) => ({
+            id: leader.id,
+            name: leader.name
+          }));
+        
+        setAvailableLeaders(leaders);
+        
+        // 리더의 GBS 목록 가져오기
+        if (leaderHistory && leaderHistory.histories) {
+          const activeGbsList = leaderHistory.histories
+            .filter(history => history.isActive)
+            .map(history => ({
+              id: history.gbsId,
+              name: history.gbsName
+            }));
+          
+          setUserGbsList(activeGbsList);
+        }
+      } catch (err) {
+        console.error("리더 및 GBS 정보를 가져오는 중 오류가 발생했습니다:", err);
+      } finally {
+        setIsLeadersLoading(false);
+      }
+    };
+
+    fetchLeadersAndGbs();
+  }, [userDetails, leaderHistory]);
 
   if (isLoading) {
     return (
@@ -278,7 +420,7 @@ export default function ProfilePage() {
                 <CardDescription>리더로서의 활동 및 담당 GBS 정보</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="bg-gray-50 p-6 rounded-lg flex flex-col items-center">
                     <Users className="h-12 w-12 text-indigo-500 mb-4" />
                     <h3 className="text-lg font-medium mb-2">담당 GBS 관리</h3>
@@ -292,6 +434,233 @@ export default function ProfilePage() {
                     <p className="text-gray-500 text-center mb-4">담당 GBS의 출석 통계와 추이를 확인하세요.</p>
                     <Button variant="outline" className="w-full">출석 통계 확인</Button>
                   </div>
+                  
+                  <div className="bg-gray-50 p-6 rounded-lg flex flex-col items-center">
+                    <UserPlus className="h-12 w-12 text-indigo-500 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">리더 위임 관리</h3>
+                    <p className="text-gray-500 text-center mb-4">출석 입력을 다른 리더에게 위임하세요.</p>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full">위임 관리</Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>리더 위임 생성</DialogTitle>
+                          <DialogDescription>
+                            GBS 출석 입력을 다른 리더에게 위임할 수 있습니다. 위임 기간을 설정하세요.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <Form {...form}>
+                          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="delegateId"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>위임 받을 리더</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="리더 선택하기" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {isLeadersLoading ? (
+                                        <SelectItem value="loading" disabled>로딩중...</SelectItem>
+                                      ) : availableLeaders.length === 0 ? (
+                                        <SelectItem value="empty" disabled>가능한 리더가 없습니다</SelectItem>
+                                      ) : (
+                                        availableLeaders.map((leader) => (
+                                          <SelectItem key={leader.id} value={leader.id.toString()}>
+                                            {leader.name}
+                                          </SelectItem>
+                                        ))
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={form.control}
+                              name="gbsGroupId"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>위임할 GBS</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="GBS 선택하기" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {isLeadersLoading ? (
+                                        <SelectItem value="loading" disabled>로딩중...</SelectItem>
+                                      ) : userGbsList.length === 0 ? (
+                                        <SelectItem value="empty" disabled>담당 GBS가 없습니다</SelectItem>
+                                      ) : (
+                                        userGbsList.map((gbs) => (
+                                          <SelectItem key={gbs.id} value={gbs.id.toString()}>
+                                            {gbs.name}
+                                          </SelectItem>
+                                        ))
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={form.control}
+                                name="startDate"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-col">
+                                    <FormLabel>시작일</FormLabel>
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <FormControl>
+                                          <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                              "pl-3 text-left font-normal",
+                                              !field.value && "text-muted-foreground"
+                                            )}
+                                          >
+                                            {field.value ? (
+                                              dateFormat(field.value, "yyyy년 MM월 dd일", { locale: ko })
+                                            ) : (
+                                              <span>날짜 선택</span>
+                                            )}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                          </Button>
+                                        </FormControl>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                        <CalendarComponent
+                                          mode="single"
+                                          selected={field.value}
+                                          onSelect={field.onChange}
+                                          initialFocus
+                                          locale={ko}
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="endDate"
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-col">
+                                    <FormLabel>종료일</FormLabel>
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <FormControl>
+                                          <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                              "pl-3 text-left font-normal",
+                                              !field.value && "text-muted-foreground"
+                                            )}
+                                          >
+                                            {field.value ? (
+                                              dateFormat(field.value, "yyyy년 MM월 dd일", { locale: ko })
+                                            ) : (
+                                              <span>날짜 선택</span>
+                                            )}
+                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                          </Button>
+                                        </FormControl>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-auto p-0" align="start">
+                                        <CalendarComponent
+                                          mode="single"
+                                          selected={field.value}
+                                          onSelect={field.onChange}
+                                          initialFocus
+                                          locale={ko}
+                                        />
+                                      </PopoverContent>
+                                    </Popover>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            
+                            <DialogFooter>
+                              <Button type="submit" disabled={isCreatingDelegation}>
+                                {isCreatingDelegation ? "처리 중..." : "위임 생성"}
+                              </Button>
+                            </DialogFooter>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+
+                {/* 리더 위임 섹션 */}
+                <div className="mt-8">
+                  <div className="flex items-center justify-between border-b pb-2 mb-4">
+                    <div className="flex items-center">
+                      <Clock className="h-5 w-5 text-indigo-500 mr-2" />
+                      <h3 className="text-lg font-medium">리더 위임 현황</h3>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowDelegationSection(!showDelegationSection)}
+                    >
+                      {showDelegationSection ? (
+                        <ChevronUp className="h-5 w-5" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {showDelegationSection && (
+                    <>
+                      {isDelegationsLoading ? (
+                        <div className="flex justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                        </div>
+                      ) : !activeDelegations || activeDelegations.length === 0 ? (
+                        <p className="text-center text-gray-500 py-6">현재 활성화된 위임이 없습니다.</p>
+                      ) : (
+                        <div className="space-y-4">
+                          {activeDelegations.map((delegation) => (
+                            <div key={delegation.id} className="border rounded-lg p-4">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium">{delegation.gbsGroupName}</h4>
+                                  <p className="text-sm text-gray-500">
+                                    위임자: {delegation.delegatorName} → 대리자: {delegation.delegateeName}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {new Date(delegation.startDate).toLocaleDateString('ko-KR')} ~ 
+                                    {delegation.endDate ? new Date(delegation.endDate).toLocaleDateString('ko-KR') : '무기한'}
+                                  </p>
+                                </div>
+                                <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">
+                                  활성화
+                                </Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 {/* GBS 히스토리 섹션 */}
