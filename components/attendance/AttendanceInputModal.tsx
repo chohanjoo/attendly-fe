@@ -35,6 +35,7 @@ interface AttendanceInputModalProps {
   onToggleWorship: (index: number) => void;
   onSave: (activeInputs: AttendanceItemRequest[]) => void;
   isPending: boolean;
+  attendanceExists?: boolean[]; // 각 멤버별로 기존 출석 데이터 존재 여부
 }
 
 export default function AttendanceInputModal({
@@ -46,16 +47,36 @@ export default function AttendanceInputModal({
   onInputChange,
   onToggleWorship,
   onSave,
-  isPending
+  isPending,
+  attendanceExists = []
 }: AttendanceInputModalProps) {
-  const [activeMemberIndices, setActiveMemberIndices] = useState<Set<number>>(
-    new Set(attendanceInputs.map((_, index) => index))
-  );
+  const [activeMemberIndices, setActiveMemberIndices] = useState<Set<number>>(new Set());
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // attendanceInputs가 변경될 때마다 모든 멤버를 활성화 상태로 설정
+  // 모달이 열릴 때만 활성화 상태 초기화
   useEffect(() => {
-    setActiveMemberIndices(new Set(attendanceInputs.map((_, index) => index)));
-  }, [attendanceInputs]);
+    if (open && !isInitialized && attendanceInputs.length > 0) {
+      // 기존 출석 데이터가 있는 멤버만 활성화
+      const initialActiveIndices = new Set<number>();
+      
+      attendanceInputs.forEach((_, index) => {
+        // attendanceExists 배열이 제공되면 해당 값을 사용하고, 아니면 모든 멤버 활성화
+        if (attendanceExists.length > 0) {
+          if (attendanceExists[index]) {
+            initialActiveIndices.add(index);
+          }
+        } else {
+          initialActiveIndices.add(index);
+        }
+      });
+      
+      setActiveMemberIndices(initialActiveIndices);
+      setIsInitialized(true);
+    } else if (!open) {
+      // 모달이 닫힐 때 초기화 상태 리셋
+      setIsInitialized(false);
+    }
+  }, [open, attendanceInputs, isInitialized, attendanceExists]);
 
   const toggleMemberActive = (index: number) => {
     const newActiveMemberIndices = new Set(activeMemberIndices);

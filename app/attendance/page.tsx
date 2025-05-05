@@ -35,6 +35,7 @@ export default function AttendancePage() {
     error,
     isPending,
     attendanceInputs,
+    attendanceExists,
     handleInputChange,
     toggleWorship,
     handleStartAttendanceInput,
@@ -135,6 +136,7 @@ export default function AttendancePage() {
           onOpenChange={setOpenModal}
           weekStart={weekStart}
           attendanceInputs={attendanceInputs}
+          attendanceExists={attendanceExists}
           memberNames={memberNames}
           onInputChange={handleInputChange}
           onToggleWorship={toggleWorship}

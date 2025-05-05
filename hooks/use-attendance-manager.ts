@@ -9,6 +9,7 @@ export const useAttendanceManager = () => {
   const [weekStart, setWeekStart] = useState<string>(getWeekStart());
   const [openModal, setOpenModal] = useState(false);
   const [attendanceInputs, setAttendanceInputs] = useState<AttendanceItemRequest[]>([]);
+  const [attendanceExists, setAttendanceExists] = useState<boolean[]>([]);
   const [activeTab, setActiveTab] = useState("weekly");
   const [monthlyData, setMonthlyData] = useState<MonthlyAttendance[]>([]);
   const [isMonthlyLoading, setIsMonthlyLoading] = useState(false);
@@ -42,22 +43,44 @@ export const useAttendanceManager = () => {
 
   // 출석 입력 시작하기
   const handleStartAttendanceInput = () => {
-    // 기존 데이터가 있으면 그대로 사용, 없으면 GBS 멤버 데이터로 초기화
-    const initialInputs = attendances && attendances.length > 0
-      ? attendances.map(att => ({
-          memberId: att.memberId,
-          worship: att.worship,
-          qtCount: att.qtCount,
-          ministry: att.ministry
-        }))
-      : gbsMembers?.members.map(member => ({
+    if (!gbsMembers || gbsMembers.members.length === 0) {
+      setAttendanceInputs([]);
+      setAttendanceExists([]);
+      setOpenModal(true);
+      return;
+    }
+    
+    // GBS 모든 멤버를 포함하는 초기 데이터 생성
+    const initialInputs: AttendanceItemRequest[] = [];
+    const existsFlags: boolean[] = [];
+    
+    gbsMembers.members.forEach(member => {
+      // 기존 출석 데이터가 있는 멤버인지 확인
+      const existingAttendance = attendances?.find(att => att.memberId === member.id);
+      
+      if (existingAttendance) {
+        // 기존 출석 데이터가 있는 경우
+        initialInputs.push({
+          memberId: existingAttendance.memberId,
+          worship: existingAttendance.worship,
+          qtCount: existingAttendance.qtCount,
+          ministry: existingAttendance.ministry
+        });
+        existsFlags.push(true); // 출석 데이터 있음
+      } else {
+        // 기존 출석 데이터가 없는 경우
+        initialInputs.push({
           memberId: member.id,
           worship: 'X' as 'O' | 'X',
           qtCount: 0,
           ministry: 'A' as 'A' | 'B' | 'C'
-        })) || [];
+        });
+        existsFlags.push(false); // 출석 데이터 없음
+      }
+    });
     
     setAttendanceInputs(initialInputs);
+    setAttendanceExists(existsFlags);
     setOpenModal(true);
   };
 
@@ -95,16 +118,14 @@ export const useAttendanceManager = () => {
   const getMemberNameMap = () => {
     const nameMap: Record<number, string> = {};
     
-    // attendances에서 멤버 이름 추출
-    attendances?.forEach(att => {
-      nameMap[att.memberId] = att.memberName;
+    // gbsMembers에서 모든 멤버 이름 추출
+    gbsMembers?.members.forEach(member => {
+      nameMap[member.id] = member.name;
     });
     
-    // gbsMembers에서 멤버 이름 추출 (attendances에 없는 경우)
-    gbsMembers?.members.forEach(member => {
-      if (!nameMap[member.id]) {
-        nameMap[member.id] = member.name;
-      }
+    // attendances에서 멤버 이름 추가 또는 업데이트
+    attendances?.forEach(att => {
+      nameMap[att.memberId] = att.memberName;
     });
     
     return nameMap;
@@ -116,6 +137,7 @@ export const useAttendanceManager = () => {
     openModal,
     setOpenModal,
     attendanceInputs,
+    attendanceExists,
     activeTab,
     setActiveTab,
     monthlyData,
