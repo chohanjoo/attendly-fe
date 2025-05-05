@@ -62,13 +62,13 @@ export const useAttendanceManager = () => {
   };
 
   // 출석 데이터 저장
-  const handleSaveAttendance = () => {
+  const handleSaveAttendance = (activeInputs: AttendanceItemRequest[]) => {
     if (!gbsId) return;
     
     const attendanceData = {
       gbsId,
       weekStart,
-      attendances: attendanceInputs
+      attendances: activeInputs // AttendanceInputModal에서 이미 필터링된 멤버만 사용
     };
     
     mutate(attendanceData);

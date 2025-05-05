@@ -71,7 +71,7 @@ export default function AttendanceInputModal({
     // 활성화된 멤버들만 필터링
     const activeInputs = attendanceInputs.filter((_, index) => activeMemberIndices.has(index));
     
-    // 부모 컴포넌트의 onSave에 활성화된 멤버만 전달
+    // API 요청에서 비활성화된 멤버 제외
     onSave(activeInputs);
   };
 
