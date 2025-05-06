@@ -23,7 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Save, X, AlertCircle, User, UserX } from "lucide-react";
+import { Save, X, AlertCircle, User, UserX, UserCog } from "lucide-react";
+import { LeaderDelegationResponse } from "@/types/delegation";
 
 interface AttendanceInputModalProps {
   open: boolean;
@@ -36,6 +37,8 @@ interface AttendanceInputModalProps {
   onSave: (activeInputs: AttendanceItemRequest[]) => void;
   isPending: boolean;
   attendanceExists?: boolean[]; // 각 멤버별로 기존 출석 데이터 존재 여부
+  selectedDelegation?: LeaderDelegationResponse | null; // 선택된 위임 정보
+  gbsName?: string; // GBS 이름
 }
 
 export default function AttendanceInputModal({
@@ -48,7 +51,9 @@ export default function AttendanceInputModal({
   onToggleWorship,
   onSave,
   isPending,
-  attendanceExists = []
+  attendanceExists = [],
+  selectedDelegation,
+  gbsName
 }: AttendanceInputModalProps) {
   const [activeMemberIndices, setActiveMemberIndices] = useState<Set<number>>(new Set());
   const [isInitialized, setIsInitialized] = useState(false);
@@ -96,13 +101,28 @@ export default function AttendanceInputModal({
     onSave(activeInputs);
   };
 
+  // 현재 GBS 정보 텍스트 (위임된 GBS인지 자신의 GBS인지 표시)
+  const currentGbsInfo = selectedDelegation
+    ? `${selectedDelegation.gbsGroupName} (${selectedDelegation.delegatorName}님의 GBS)`
+    : gbsName 
+    ? `${gbsName} (내 GBS)` 
+    : "GBS 정보";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>GBS 출석 입력</DialogTitle>
+          <DialogTitle className="flex items-center space-x-2">
+            {selectedDelegation && <UserCog className="h-5 w-5 text-indigo-500" />}
+            <span>GBS 출석 입력 - {currentGbsInfo}</span>
+          </DialogTitle>
           <DialogDescription>
             {formatDate(weekStart)} 주간의 GBS 출석 정보를 입력하세요.
+            {selectedDelegation && (
+              <span className="block mt-1 text-indigo-500">
+                ※ 위임받은 GBS의 출석을 입력하고 있습니다.
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 

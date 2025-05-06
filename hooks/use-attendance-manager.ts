@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import { useLeaderGbs, useGbsMembers, useAttendance, useSaveAttendance } from "@/hooks/use-attendance";
+import { useDelegatedGbs } from "@/hooks/use-delegation";
+import { useAuth } from "@/hooks/use-auth";
 import { fetchMonthlyAttendance } from "@/services/attendance-service";
 import { getWeekStart } from "@/lib/attendance-utils";
 import { AttendanceItemRequest, MonthlyAttendance } from "@/types/attendance";
+import { LeaderDelegationResponse } from "@/types/delegation";
 
 export const useAttendanceManager = () => {
+  const { user } = useAuth();
   const [gbsId, setGbsId] = useState<number | null>(null);
   const [weekStart, setWeekStart] = useState<string>(getWeekStart());
   const [openModal, setOpenModal] = useState(false);
@@ -13,19 +17,27 @@ export const useAttendanceManager = () => {
   const [activeTab, setActiveTab] = useState("weekly");
   const [monthlyData, setMonthlyData] = useState<MonthlyAttendance[]>([]);
   const [isMonthlyLoading, setIsMonthlyLoading] = useState(false);
+  const [selectedDelegation, setSelectedDelegation] = useState<LeaderDelegationResponse | null>(null);
   
   // API 호출 훅 사용
   const { data: leaderGbs } = useLeaderGbs();
+  const { data: delegatedGbsList, isLoading: isDelegatedGbsLoading } = useDelegatedGbs(
+    user?.id ? user.id : null
+  );
   const { data: gbsMembers, isLoading: isMembersLoading, error: membersError } = useGbsMembers(gbsId);
   const { data: attendances, isLoading, error } = useAttendance(gbsId, weekStart);
   const { mutate, isPending } = useSaveAttendance();
 
   // gbsId 설정
   useEffect(() => {
-    if (leaderGbs) {
+    if (selectedDelegation) {
+      // 위임받은 GBS가 선택된 경우, 해당 GBS ID 사용
+      setGbsId(selectedDelegation.gbsGroupId);
+    } else if (leaderGbs) {
+      // 자신의 GBS 사용
       setGbsId(leaderGbs.gbsId);
     }
-  }, [leaderGbs]);
+  }, [leaderGbs, selectedDelegation]);
 
   // 출석 입력 변경 핸들러
   const handleInputChange = (index: number, field: keyof AttendanceItemRequest, value: any) => {
@@ -114,6 +126,16 @@ export const useAttendanceManager = () => {
     }
   }, [activeTab, gbsId]);
 
+  // 위임된 GBS 선택 핸들러
+  const handleDelegationSelect = (delegation: LeaderDelegationResponse | null) => {
+    setSelectedDelegation(delegation);
+    
+    // GBS 변경 시 월간 출석 데이터 초기화
+    if (activeTab === "monthly") {
+      setMonthlyData([]);
+    }
+  };
+
   // 멤버 이름을 매핑한 객체 생성
   const getMemberNameMap = () => {
     const nameMap: Record<number, string> = {};
@@ -150,11 +172,15 @@ export const useAttendanceManager = () => {
     isLoading,
     error,
     isPending,
+    delegatedGbsList,
+    isDelegatedGbsLoading,
+    selectedDelegation,
     handleInputChange,
     toggleWorship,
     handleStartAttendanceInput,
     handleSaveAttendance,
     handleFetchMonthlyAttendance,
+    handleDelegationSelect,
     getMemberNameMap
   };
 }; 

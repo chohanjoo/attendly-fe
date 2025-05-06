@@ -173,6 +173,22 @@ const handleTokenExpiration = async (error: any) => {
   }
 };
 
+// UUID 생성 함수
+const generateUUID = () => {
+  // crypto API를 사용하여 UUID 생성 (클라이언트 사이드에서만 작동)
+  if (isClientSide() && window.crypto) {
+    return ([1e7] as any + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c: any) =>
+      (c ^ (window.crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+    );
+  }
+  // 서버 사이드 또는 crypto API가 없는 경우 간단한 UUID 대체 생성
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 // axios 인스턴스 생성
 const api = axios.create({
   baseURL,
@@ -191,6 +207,10 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    
+    // 요청마다 고유한 X-Request-ID 추가
+    config.headers['X-Request-ID'] = generateUUID();
+    
     // 요청 로깅
     return logRequest(config);
   },

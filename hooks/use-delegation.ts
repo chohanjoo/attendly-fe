@@ -28,6 +28,31 @@ export const useActiveDelegations = (userId: number | null, date?: string) => {
   });
 };
 
+// 위임받은 GBS 목록 조회 훅
+export const useDelegatedGbs = (userId: number | null, date?: string) => {
+  return useQuery({
+    queryKey: ['delegatedGbs', userId, date],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (userId) {
+        params.append('userId', userId.toString());
+      }
+      
+      if (date) {
+        params.append('date', date);
+      }
+      
+      const response = await api.get(`/api/delegations/active?${params.toString()}`);
+      // 리더가 위임받은 GBS만 필터링 (delegateeId가 현재 사용자인 것만)
+      return response.data.filter((delegation: LeaderDelegationResponse) => 
+        delegation.delegateeId === userId
+      ) as LeaderDelegationResponse[];
+    },
+    enabled: !!userId
+  });
+};
+
 // 위임 생성 뮤테이션 훅
 export const useCreateDelegation = () => {
   const queryClient = useQueryClient();
