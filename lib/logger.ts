@@ -92,15 +92,53 @@ const sendToDiscordDirectly = async (level: string, ...args: any[]) => {
   
   try {
     // 로그 메시지 준비
-    const content = args.map(arg => 
-      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-    ).join('\n');
+    const formattedArgs = args.map(arg => {
+      if (typeof arg === 'object') {
+        const jsonString = JSON.stringify(arg, null, 2);
+        
+        // Discord 메시지 제한(2000자)을 고려하여 큰 객체 처리
+        if (jsonString.length > 1500) {
+          // 배열인 경우 다르게 처리
+          if (Array.isArray(arg)) {
+            return '```json\n// 큰 배열 요약 (전체 길이: ' + arg.length + '항목, ' + jsonString.length + '자)\n[\n' +
+              '  // 처음 3개 항목만 표시\n' +
+              arg.slice(0, 3).map(item => '  ' + JSON.stringify(item)).join(',\n') +
+              (arg.length > 3 ? ',\n  // ... 그 외 ' + (arg.length - 3) + '개 항목 ...' : '') +
+              '\n]\n```';
+          }
+          
+          // 일반 객체인 경우
+          const keys = Object.keys(arg);
+          return '```json\n// 큰 객체 요약 (전체 길이: ' + jsonString.length + '자)\n{\n' +
+            '  // 키 목록: ' + JSON.stringify(keys) + ',\n' +
+            '  // 첫 번째 키 미리보기\n  "' + keys[0] + '": ' + 
+            JSON.stringify(arg[keys[0]]).substring(0, 100) + 
+            (JSON.stringify(arg[keys[0]]).length > 100 ? '...' : '') + 
+            (keys.length > 1 ? ',\n  // ... 그 외 ' + (keys.length - 1) + '개 키 ...' : '') +
+            '\n}\n```';
+        }
+        
+        // 일반 크기 객체는 그대로 표시
+        return '```json\n' + jsonString + '\n```';
+      }
+      return String(arg);
+    });
+    
+    const content = formattedArgs.join('\n');
+    
+    // 현재 시간 포맷팅
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('ko-KR');
+    const dateString = now.toLocaleDateString('ko-KR');
     
     // 임베드 생성
     const embed = {
-      title: `[${level}] 로그 메시지`,
+      title: `${getEmojiForLevel(level)} [${level}] 로그 메시지`,
       color: getColorForLevel(level),
       description: content,
+      footer: {
+        text: `Attendly | ${dateString} ${timeString}`
+      },
       timestamp: new Date().toISOString()
     };
     
@@ -135,6 +173,19 @@ const getColorForLevel = (level: string): number => {
     case 'WARN': return 0xf5a742;  // 주황
     case 'ERROR': return 0xf54242; // 빨강
     default: return 0xffffff;      // 흰색
+  }
+};
+
+/**
+ * 로그 레벨에 따른 이모지 반환
+ */
+const getEmojiForLevel = (level: string): string => {
+  switch (level) {
+    case 'DEBUG': return '🔍';
+    case 'INFO': return 'ℹ️';
+    case 'WARN': return '⚠️';
+    case 'ERROR': return '🔴';
+    default: return '📝';
   }
 };
 
