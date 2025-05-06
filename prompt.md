@@ -16,3 +16,7 @@ GBS 에 속한 모든 조원 조회 : /api/v1/gbs-members/my-gbs
 GBS 출석 조회 API : /api/attendance 
 
 API 스펙은 @api-docs.json 을 참고한다
+
+
+-- rule
+https://cursor.directory/front-end-cursor-rules
