@@ -19,13 +19,6 @@ export function AuthLayout({ children, requireAuth = true }: AuthLayoutProps) {
   const { user, isLoading } = useAuth();
   const router = useRouter();
 
-  // 화면에 접근할 때마다 유저 정보 로깅
-  useEffect(() => {
-    if (!isLoading) {
-      logger.logUserInfo(user);
-    }
-  }, [user, isLoading]);
-
   useEffect(() => {
     // 로딩 중이면 리다이렉트하지 않음
     if (isLoading) return;

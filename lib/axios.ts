@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import logger from './logger';
 
 // API 기본 URL
 const baseURL = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -15,6 +16,7 @@ if (process.env.NODE_ENV !== 'production') {
   console.log('Current API URL:', baseURL);
   console.log('Environment:', environment);
   console.log('API 로깅:', ENABLE_API_LOGGING ? '활성화' : '비활성화');
+  logger.info('API 설정', { baseURL, environment, logging: ENABLE_API_LOGGING });
 }
 
 // 로깅 허용 여부 확인 함수
@@ -64,6 +66,16 @@ const logRequest = (config: InternalAxiosRequestConfig) => {
   }
   
   console.groupEnd();
+  
+  // Discord로 로그 전송
+  logger.debug(`API 요청: ${method} ${url}`, {
+    url: `${config.baseURL}${url}`,
+    method,
+    headers: sanitizeHeaders(config.headers),
+    params: config.params,
+    data: config.data
+  });
+  
   return config;
 };
 
@@ -85,6 +97,17 @@ const logResponse = (response: AxiosResponse) => {
   }
   
   console.groupEnd();
+  
+  // Discord로 로그 전송
+  logger.debug(`API 응답: ${method} ${url} - ${response.status}`, {
+    url: `${response.config.baseURL}${url}`,
+    method,
+    status: response.status,
+    statusText: response.statusText,
+    duration,
+    data: response.data
+  });
+  
   return response;
 };
 
@@ -110,6 +133,18 @@ const logError = (error: any) => {
   
   console.log('Error Config:', error.config);
   console.groupEnd();
+  
+  // Discord로 에러 로그 전송
+  logger.error(`API 에러: ${method} ${url}`, {
+    url: `${error.config?.baseURL}${url}`,
+    method,
+    error: error.message,
+    status: error.response?.status,
+    statusText: error.response?.statusText,
+    responseData: error.response?.data,
+    config: error.config
+  });
+  
   return Promise.reject(error);
 };
 

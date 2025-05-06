@@ -44,7 +44,6 @@ export function AppShellLayout({ children }: AppShellLayoutProps) {
   useEffect(() => {
     if (user) {
       logger.info(`사용자 ${user.name}(${user.email})님이 ${pathname} 페이지에 접근했습니다.`);
-      logger.logUserInfo(user);
     }
   }, [pathname, user]);
 

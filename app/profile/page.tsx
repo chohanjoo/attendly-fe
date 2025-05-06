@@ -176,13 +176,6 @@ export default function ProfilePage() {
         setIsLoading(true);
         const response = await api.get("/auth/me");
         setUserDetails(response.data);
-        
-        // 로깅 시 User 객체 타입 변환 (string id → number id)
-        const logUser = {
-          ...response.data,
-          id: String(response.data.id) // id를 string으로 변환
-        };
-        logger.logUserInfo(logUser);
       } catch (err) {
         console.error("사용자 정보를 가져오는 중 오류가 발생했습니다:", err);
         setError("사용자 정보를 가져오는 중 오류가 발생했습니다.");

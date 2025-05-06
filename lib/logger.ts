@@ -226,65 +226,6 @@ const logger = {
       }
     }
   },
-
-  /**
-   * 로그인한 유저 정보 로깅
-   * @param user 사용자 객체
-   */
-  logUserInfo: (user: User | null) => {
-    if (!user) {
-      console.log('[USER] 로그인한 사용자 없음');
-      return;
-    }
-
-    console.group('👤 로그인한 유저 정보');
-    console.log('ID:', user.id);
-    console.log('이름:', user.name);
-    console.log('이메일:', user.email);
-    console.log('역할:', user.role);
-    
-    // 추가 정보가 있다면 출력
-    const additionalKeys = Object.keys(user).filter(
-      key => !['id', 'name', 'email', 'role'].includes(key)
-    );
-    
-    if (additionalKeys.length > 0) {
-      console.group('추가 정보');
-      additionalKeys.forEach(key => {
-        console.log(`${key}:`, user[key]);
-      });
-      console.groupEnd();
-    }
-    
-    console.groupEnd();
-    
-    // Discord에 전송
-    if (discordWebhookUrl) {
-      // 기본 필드 추가
-      const fields = [
-        { name: 'ID', value: user.id },
-        { name: '이름', value: user.name },
-        { name: '이메일', value: user.email },
-        { name: '역할', value: user.role }
-      ];
-      
-      // 추가 정보가 있다면 필드에 추가
-      if (additionalKeys.length > 0) {
-        additionalKeys.forEach(key => {
-          const value = typeof user[key] === 'object'
-            ? JSON.stringify(user[key])
-            : String(user[key]);
-          fields.push({ name: key, value });
-        });
-      }
-      
-      sendToDiscord('INFO', {
-        title: '👤 로그인한 유저 정보',
-        fields,
-        color: 0x42f587
-      });
-    }
-  },
 };
 
 // 앱 시작 시 환경 정보 출력
