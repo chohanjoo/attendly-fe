@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppShellLayout } from "@/components/layouts/app-shell-layout";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Mail, User as UserIcon, UserCircle, Info, Shield, Users, BarChart3, History, ChevronDown, ChevronUp, UserPlus, Clock } from "lucide-react";
+import { Calendar, Mail, User as UserIcon, UserCircle, Info, Shield, Users, BarChart3, History, ChevronDown, ChevronUp, UserPlus, Clock, Phone } from "lucide-react";
 import { 
   Tabs, 
   TabsContent, 
@@ -62,9 +62,10 @@ import {
 import { cn } from "@/lib/utils";
 import api from "@/lib/axios";
 import logger from "@/lib/logger";
-import { useLeaderGbsHistory } from "@/hooks/use-attendance";
+import { useLeaderGbsHistory, useGbsMembers } from "@/hooks/use-attendance";
 import { useActiveDelegations, useCreateDelegation } from "@/hooks/use-delegation";
 import Link from "next/link";
+import { GbsMembersListResponse, GbsMemberResponse } from "@/types/attendance";
 
 interface UserDetails {
   id: number;
@@ -125,6 +126,12 @@ export default function ProfilePage() {
   const [availableLeaders, setAvailableLeaders] = useState<Array<{ id: number, name: string }>>([]);
   const [userGbsList, setUserGbsList] = useState<Array<{ id: number, name: string }>>([]);
   const [isLeadersLoading, setIsLeadersLoading] = useState(false);
+  
+  // GBS 멤버 모달 관련 상태
+  const [isGbsDialogOpen, setIsGbsDialogOpen] = useState(false);
+  const [selectedGbsId, setSelectedGbsId] = useState<number | null>(null);
+  const [isGbsLoading, setIsGbsLoading] = useState(false);
+  const [gbsMembers, setGbsMembers] = useState<GbsMembersListResponse | null>(null);
   
   // 현재 위임 상태 가져오기
   const { data: activeDelegations, isLoading: isDelegationsLoading, refetch: refetchDelegations } = 
@@ -231,6 +238,40 @@ export default function ProfilePage() {
 
     fetchLeadersAndGbs();
   }, [userDetails, leaderHistory]);
+
+  // GBS 멤버 가져오기
+  const fetchGbsMembers = async (gbsId: number) => {
+    if (!gbsId) return;
+    
+    try {
+      setIsGbsLoading(true);
+      const response = await api.get(`/api/v1/gbs-members/${gbsId}`);
+      setGbsMembers(response.data);
+    } catch (err) {
+      console.error("GBS 멤버 정보를 가져오는 중 오류가 발생했습니다:", err);
+    } finally {
+      setIsGbsLoading(false);
+    }
+  };
+
+  // GBS 선택 시 멤버 정보 가져오기
+  const handleGbsSelect = (gbsId: number) => {
+    setSelectedGbsId(gbsId);
+    fetchGbsMembers(gbsId);
+  };
+
+  // GBS 모달 열기
+  const handleOpenGbsModal = () => {
+    setIsGbsDialogOpen(true);
+    
+    // 활성 GBS가 있으면 첫 번째 GBS 선택
+    if (leaderHistory && leaderHistory.histories && leaderHistory.histories.length > 0) {
+      const activeGbs = leaderHistory.histories.find(history => history.isActive);
+      if (activeGbs) {
+        handleGbsSelect(activeGbs.gbsId);
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -415,7 +456,112 @@ export default function ProfilePage() {
                     <Users className="h-12 w-12 text-indigo-500 mb-4" />
                     <h3 className="text-lg font-medium mb-2">담당 GBS 관리</h3>
                     <p className="text-gray-500 text-center mb-4">담당하고 있는 GBS의 멤버와 출석 정보를 확인하세요.</p>
-                    <Button variant="outline" className="w-full">내 GBS 보기</Button>
+                    <Dialog open={isGbsDialogOpen} onOpenChange={setIsGbsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full" onClick={handleOpenGbsModal}>내 GBS 보기</Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[700px]">
+                        <DialogHeader>
+                          <DialogTitle>내 GBS 멤버</DialogTitle>
+                          <DialogDescription>
+                            담당하고 있는 GBS의 멤버 정보를 확인하세요.
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        {/* GBS 선택 탭 (활성 GBS가 여러 개인 경우) */}
+                        {leaderHistory && leaderHistory.histories && leaderHistory.histories.filter(h => h.isActive).length > 1 && (
+                          <div className="mb-4">
+                            <TabsList className="w-full">
+                              {leaderHistory.histories
+                                .filter(history => history.isActive)
+                                .map(gbs => (
+                                  <TabsTrigger 
+                                    key={gbs.gbsId} 
+                                    value={gbs.gbsId.toString()}
+                                    className={selectedGbsId === gbs.gbsId ? "bg-indigo-100" : ""}
+                                    onClick={() => handleGbsSelect(gbs.gbsId)}
+                                  >
+                                    {gbs.gbsName}
+                                  </TabsTrigger>
+                                ))
+                              }
+                            </TabsList>
+                          </div>
+                        )}
+                        
+                        {/* GBS 멤버 목록 */}
+                        {isGbsLoading ? (
+                          <div className="flex justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                          </div>
+                        ) : !gbsMembers ? (
+                          <p className="text-center text-gray-500 py-6">GBS 정보를 불러올 수 없습니다.</p>
+                        ) : (
+                          <div>
+                            <div className="flex justify-between items-center mb-4">
+                              <h3 className="text-lg font-medium">{gbsMembers.gbsName}</h3>
+                              <Badge variant="outline" className="bg-indigo-100 text-indigo-800">
+                                총 {gbsMembers.memberCount}명
+                              </Badge>
+                            </div>
+                            
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                              {gbsMembers.members.map((member) => (
+                                <div key={member.id} className="flex items-center justify-between border rounded-lg p-3 hover:bg-gray-50">
+                                  <div className="flex items-center">
+                                    <Avatar className="h-10 w-10 mr-3">
+                                      <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=6366f1&color=fff`} />
+                                      <AvatarFallback>{member.name.slice(0, 2)}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <p className="font-medium">{member.name}</p>
+                                      <div className="flex flex-col space-y-1 text-xs text-gray-500 mt-1">
+                                        <div className="flex items-center">
+                                          <Calendar className="h-3 w-3 mr-1" />
+                                          <span>{member.joinDate && `가입일: ${new Date(member.joinDate).toLocaleDateString('ko-KR')}`}</span>
+                                        </div>
+                                        {member.birthDate && (
+                                          <div className="flex items-center">
+                                            <UserIcon className="h-3 w-3 mr-1" />
+                                            <span>생일: {new Date(member.birthDate).toLocaleDateString('ko-KR')}</span>
+                                          </div>
+                                        )}
+                                        {member.phoneNumber && (
+                                          <div className="flex items-center">
+                                            <Phone className="h-3 w-3 mr-1" />
+                                            <span>{member.phoneNumber}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex space-x-2">
+                                    {member.phoneNumber && (
+                                      <a 
+                                        href={`tel:${member.phoneNumber}`} 
+                                        className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600"
+                                        title="전화 걸기"
+                                      >
+                                        <Phone className="h-4 w-4" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            
+                            <div className="flex justify-end mt-6">
+                              <Button 
+                                variant="outline" 
+                                onClick={() => setIsGbsDialogOpen(false)}
+                              >
+                                닫기
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   
                   <div className="bg-gray-50 p-6 rounded-lg flex flex-col items-center">
