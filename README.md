@@ -8,6 +8,7 @@
 - **위임 관리**: 리더가 다른 리더에게 출석 입력 권한 위임
 - **마을 대시보드**: 마을장을 위한 마을 내 모든 GBS 출석 현황 및 통계
 - **부서 보고서**: 교역자를 위한 부서별 출석 통계 및 리포트
+- **Discord 로깅**: 시스템 로그를 Discord 채널로 전송하여 원격 모니터링 가능
 
 ## 기술 스택
 
@@ -20,6 +21,7 @@
   - React Query (데이터 관리)
   - React Hook Form (폼 관리)
   - Recharts / Chart.js (데이터 시각화)
+  - Discord Webhook (로깅)
 
 ## 프로젝트 구조
 
@@ -39,6 +41,7 @@ attendly-fe/
 ├── lib/                   # 유틸리티 함수
 ├── services/              # API 서비스
 ├── types/                 # TypeScript 타입 정의
+├── docs/                  # 문서
 └── public/                # 정적 파일
 ```
 
@@ -59,6 +62,26 @@ yarn install
 # 또는
 pnpm install
 ```
+
+### 환경 변수 설정
+
+`.env.local` 파일을 프로젝트 루트에 생성하고 다음 변수를 설정하세요:
+
+```bash
+# API 기본 URL
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# 환경 설정
+NEXT_PUBLIC_ENV=development
+
+# API 로깅 활성화 여부
+NEXT_PUBLIC_ENABLE_API_LOGGING=true
+
+# Discord 로깅 웹훅 URL (선택 사항)
+NEXT_PUBLIC_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-url
+```
+
+Discord 로깅 설정에 대한 자세한 내용은 `docs/discord-logging.md` 문서를 참조하세요.
 
 ### 개발 서버 실행
 
@@ -110,4 +133,5 @@ pnpm build
 - `spec.md` - 프로젝트 명세서
 - `api-documentation.md` - API 문서
 - `todolist.md` - 작업 목록
-- `taskList.md` - 추가 작업 목록 
+- `taskList.md` - 추가 작업 목록
+- `docs/discord-logging.md` - Discord 로깅 설정 가이드 

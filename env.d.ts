@@ -6,6 +6,7 @@ declare namespace NodeJS {
     NEXT_PUBLIC_API_URL: string;
     NEXT_PUBLIC_ENV: 'development' | 'production' | 'test';
     NEXT_PUBLIC_ENABLE_API_LOGGING: string;
+    NEXT_PUBLIC_DISCORD_WEBHOOK_URL?: string;
     
     // 서버에서만 접근 가능한 환경 변수 (예시)
     SECRET_API_KEY?: string;

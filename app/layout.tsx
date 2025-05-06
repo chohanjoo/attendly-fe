@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { QueryClientProvider } from "@/components/query-client-provider"
 import { AuthProvider } from "@/hooks/use-auth"
 import { ToastContainer } from "@/components/ui/toast-container"
+import { DiscordLoggerProvider } from "@/components/discord-logger-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -28,6 +29,7 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
+              <DiscordLoggerProvider />
               {children}
               <ToastContainer />
             </ThemeProvider>

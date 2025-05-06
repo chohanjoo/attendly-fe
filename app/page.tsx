@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/layouts/auth-layout";
 import { AppShellLayout } from "@/components/layouts/app-shell-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarCheck2, Users, BarChart2 } from "lucide-react";
+import { CalendarCheck2, Users, BarChart2, MessageSquare } from "lucide-react";
 import logger from "@/lib/logger";
 
 export default function Home() {
   const { user } = useAuth();
   const router = useRouter();
+  const [showDiscordDemo, setShowDiscordDemo] = useState(false);
 
   // 홈 화면 접근 특별 로깅
   useEffect(() => {
@@ -20,6 +21,13 @@ export default function Home() {
       logger.info(`[홈페이지] ${user.name}님이 홈페이지에 접속했습니다. 역할: ${user.role}`);
     }
   }, [user]);
+
+  // 개발 환경에서만 Discord 데모 표시
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setShowDiscordDemo(true);
+    }
+  }, []);
 
   // 사용자 역할에 따라 적절한 페이지로 리다이렉트
   useEffect(() => {
@@ -31,6 +39,18 @@ export default function Home() {
       router.push("/attendance");
     }
   }, [user, router]);
+
+  // Discord 로그 테스트 함수
+  const testDiscordLogs = () => {
+    logger.debug("Discord 로그 테스트: DEBUG 레벨 메시지");
+    logger.info("Discord 로그 테스트: INFO 레벨 메시지");
+    logger.warn("Discord 로그 테스트: WARN 레벨 메시지");
+    logger.error("Discord 로그 테스트: ERROR 레벨 메시지", { 
+      testError: true, 
+      timestamp: new Date().toISOString(),
+      user: user || '로그인하지 않음'
+    });
+  };
 
   return (
     <AuthLayout>
@@ -98,6 +118,27 @@ export default function Home() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Discord 로그 테스트 카드 (개발 모드에서만 표시) */}
+            {showDiscordDemo && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-indigo-500" />
+                    Discord 로깅 테스트
+                  </CardTitle>
+                  <CardDescription>개발자를 위한 로깅 테스트</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500 mb-4">
+                    모든 로그 레벨을 Discord로 전송하는 테스트를 실행합니다.
+                  </p>
+                  <Button onClick={testDiscordLogs} className="w-full" variant="outline">
+                    로그 테스트 전송
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </AppShellLayout>
