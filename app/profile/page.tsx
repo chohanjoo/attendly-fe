@@ -64,6 +64,7 @@ import api from "@/lib/axios";
 import logger from "@/lib/logger";
 import { useLeaderGbsHistory } from "@/hooks/use-attendance";
 import { useActiveDelegations, useCreateDelegation } from "@/hooks/use-delegation";
+import Link from "next/link";
 
 interface UserDetails {
   id: number;
@@ -421,7 +422,9 @@ export default function ProfilePage() {
                     <BarChart3 className="h-12 w-12 text-indigo-500 mb-4" />
                     <h3 className="text-lg font-medium mb-2">출석 통계</h3>
                     <p className="text-gray-500 text-center mb-4">담당 GBS의 출석 통계와 추이를 확인하세요.</p>
-                    <Button variant="outline" className="w-full">출석 통계 확인</Button>
+                    <Link href="/gbs/statistics">
+                      <Button variant="outline" className="w-full">출석 통계 확인</Button>
+                    </Link>
                   </div>
                   
                   <div className="bg-gray-50 p-6 rounded-lg flex flex-col items-center">

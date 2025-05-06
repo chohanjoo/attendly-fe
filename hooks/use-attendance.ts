@@ -8,6 +8,7 @@ import {
   GbsMembersListResponse,
   LeaderGbsHistoryListResponse
 } from "@/types/attendance";
+import { GbsStatistics } from "@/types/statistics";
 
 // 리더의 GBS 정보 조회 훅
 export const useLeaderGbs = () => {
@@ -92,5 +93,19 @@ export const useLeaderGbsHistory = (leaderId: number | null) => {
       return response.data as LeaderGbsHistoryListResponse;
     },
     enabled: !!leaderId
+  });
+};
+
+// GBS 출석 통계 조회 훅
+export const useGbsStatistics = (gbsId: number | null, startDate: string, endDate: string) => {
+  return useQuery({
+    queryKey: ['gbsStatistics', gbsId, startDate, endDate],
+    queryFn: async () => {
+      const response = await api.get(`/api/gbs/${gbsId}/report`, {
+        params: { startDate, endDate }
+      });
+      return response.data as GbsStatistics;
+    },
+    enabled: !!gbsId && !!startDate && !!endDate
   });
 }; 
