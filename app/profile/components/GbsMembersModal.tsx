@@ -18,12 +18,11 @@ export const GbsMembersModal = ({ leaderHistory }: GbsMembersModalProps) => {
   const [gbsMembers, setGbsMembers] = useState<GbsMembersListResponse | null>(null);
   
   // GBS 멤버 데이터 로딩 상태
-  const { data, isLoading: isGbsLoading, refetch } = useGbsMembers(selectedGbsId);
+  const { data, isLoading: isGbsLoading } = useGbsMembers(selectedGbsId);
   
   // GBS 선택 시 멤버 정보 가져오기
   const handleGbsSelect = (gbsId: number) => {
     setSelectedGbsId(gbsId);
-    refetch();
   };
 
   // GBS 모달 열기
