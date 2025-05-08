@@ -29,11 +29,11 @@ export default function LoginForm() {
 
     try {
       console.log("로그인 시도:", credentials.email);
-      await login(credentials.email, credentials.password);
-      console.log("로그인 성공, 홈페이지로 리다이렉트 시도");
+      const userData = await login(credentials.email, credentials.password);
+      console.log("로그인 성공, 사용자 역할에 따라 리다이렉트 시도", userData?.role);
       
-      // 리다이렉트 시작 - 즉시 리다이렉트 실행
-      handleRedirect();
+      // 사용자 역할에 따라 리다이렉트
+      handleRedirect(userData?.role);
     } catch (err: any) {
       setError(err.message || '로그인 중 오류가 발생했습니다.');
       console.error('Login error:', err);
@@ -42,21 +42,29 @@ export default function LoginForm() {
     }
   };
 
-  // 리다이렉트 처리 함수를 분리하여 관리
-  const handleRedirect = () => {
-    console.log("리다이렉트 실행");
+  // 역할에 따른 리다이렉트 처리 함수
+  const handleRedirect = (role?: string) => {
+    console.log("역할에 따른 리다이렉트 실행:", role);
     
-    // 먼저 window.location으로 직접 이동 (가장 강력한 방법)
-    window.location.href = '/';
+    let targetPath = '/'; // 기본 경로
     
-    // 만약 위 방법이 작동하지 않을 경우를 대비한 백업 옵션들
+    // 역할에 따라 다른 경로로 리다이렉트
+    if (role === "VILLAGE_LEADER") {
+      targetPath = '/village'; // 마을장은 마을 관리 페이지로
+    } else if (role === "LEADER") {
+      targetPath = '/attendance'; // 리더는 출석 페이지로
+    } else if (role === "MINISTER" || role === "ADMIN") {
+      targetPath = '/reports'; // 교역자와 관리자는 통계 페이지로
+    }
+    
+    // 경로 리다이렉트
+    window.location.href = targetPath;
+    
+    // 백업 리다이렉트
     setTimeout(() => {
       console.log("1차 리다이렉트 실패, 추가 시도");
-      // replace 사용 - 히스토리 스택에 추가하지 않음
-      window.location.replace('/');
-      
-      // Next.js 라우터도 시도
-      router.replace('/');
+      window.location.replace(targetPath);
+      router.replace(targetPath);
     }, 500);
   };
 

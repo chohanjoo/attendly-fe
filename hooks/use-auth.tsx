@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
-import { saveTokens, isClientSide } from "@/lib/auth";
+import { saveTokens, saveTokensAndRole, isClientSide } from "@/lib/auth";
 import { toast } from "sonner";
 
 // 사용자 타입 정의
@@ -24,7 +24,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<User>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
   tokenRefreshed: boolean;
@@ -46,16 +46,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [tokenRefreshed, setTokenRefreshed] = useState<boolean>(false);
   const router = useRouter();
 
-  // 토큰 제거 유틸리티 함수
+  // 토큰 제거 유틸리티 함수 수정
   const clearAuthTokens = async () => {
     // 로컬 스토리지에서 토큰 제거
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    
-    // 쿠키에서도 토큰 제거
-    const cookies = await import('js-cookie').then(mod => mod.default);
-    cookies.remove('accessToken', { path: '/' });
-    cookies.remove('refreshToken', { path: '/' });
+    if (isClientSide()) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      
+      // 쿠키에서도 토큰과 역할 제거
+      try {
+        const jsCookies = await import('js-cookie').then(mod => mod.default);
+        jsCookies.remove('accessToken', { path: '/' });
+        jsCookies.remove('refreshToken', { path: '/' });
+        jsCookies.remove('role', { path: '/' });
+      } catch (e) {
+        console.error("쿠키 제거 중 오류:", e);
+      }
+    }
   };
 
   // 토큰 갱신 이벤트 리스너 설정
@@ -130,7 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, []);
 
-  // 로그인 함수
+  // 로그인 함수 수정
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
@@ -138,12 +145,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       console.log("로그인 시도:", email);
       const response = await api.post("/auth/login", { email, password });
-      const { accessToken, refreshToken, user: userData } = response.data;
+      const { accessToken, refreshToken, userId, name, role } = response.data;
       
-      console.log("로그인 성공:", userData);
+      console.log("로그인 성공:", { userId, name, role });
       
-      // 토큰 저장
-      saveTokens(accessToken, refreshToken);
+      // 토큰과 역할 저장 - 라이브러리 함수 사용
+      saveTokensAndRole(accessToken, refreshToken, role);
+      
+      // 사용자 정보 생성
+      const userData: User = {
+        id: userId,
+        email,
+        name,
+        role
+      };
       
       // 사용자 정보 설정
       setUser(userData);
@@ -163,13 +178,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // 로그아웃 함수
-  const logout = () => {
+  const logout = async () => {
     console.log("로그아웃 실행");
     
     if (!isClientSide()) return;
     
-    // 토큰 제거
-    clearAuthTokens();
+    // 토큰 및 역할 제거
+    await clearAuthTokens();
     
     // 사용자 상태 초기화
     setUser(null);

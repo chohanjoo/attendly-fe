@@ -53,6 +53,31 @@ export const saveTokens = (accessToken: string, refreshToken: string) => {
 };
 
 /**
+ * 토큰과 역할을 함께 저장하는 함수
+ * localStorage와 쿠키에 모두 저장
+ */
+export const saveTokensAndRole = (accessToken: string, refreshToken: string, role: string) => {
+  if (!isClientSide()) return;
+  
+  console.log('토큰 및 역할 저장 시작:', { accessToken: !!accessToken, refreshToken: !!refreshToken, role });
+  
+  // 기존 토큰 저장 함수 호출
+  saveTokens(accessToken, refreshToken);
+  
+  // 역할 정보 쿠키에 저장
+  cookies.set('role', role, { 
+    expires: 30, // 30일
+    path: '/',
+    sameSite: 'strict'  
+  });
+  
+  // API 인스턴스의 기본 헤더 설정
+  api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+  
+  console.log('역할 정보 설정 완료: role =', cookies.get('role'));
+};
+
+/**
  * 현재 로그인 상태 확인
  * @returns 로그인 여부
  */
