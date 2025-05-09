@@ -83,6 +83,7 @@ const VillageStatsChart = ({ data, title }: ChartProps) => {
           allWeeklyStats.push({...weekStat});
         }
       });
+
     });
     
     // 날짜순 정렬
@@ -92,31 +93,30 @@ const VillageStatsChart = ({ data, title }: ChartProps) => {
     const recentWeeks = allWeeklyStats.slice(-6);
     
     return (
-      <div className="h-64 flex items-end space-x-2 mt-4">
+      <div className="h-64 flex items-end space-x-4 mt-4 px-4">
         {recentWeeks.map((week, index) => {
           const value = activeTab === "attendance" ? week.attendanceRate : week.averageQtCount;
           const maxValue = activeTab === "attendance" ? 100 : 6;
-          const height = `${(value / maxValue) * 100}%`;
+          const height = `${(value / maxValue) * 60}%`;
           
-          // 주차 날짜 포맷 (MM.DD)
           const date = new Date(week.weekStart);
           const formattedDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}`;
           
           return (
-            <div key={week.weekStart} className="flex flex-col items-center flex-1">
-              <div className="w-full flex-1 flex items-end">
+            <div key={week.weekStart} className="flex flex-col items-center" style={{ width: '14.28%' }}>
+              <div className="w-full h-52 flex items-end">
                 <div 
-                  className={`w-full relative ${activeTab === "attendance" ? "bg-indigo-500" : "bg-amber-500"} rounded-t`}
+                  className={`w-full relative ${activeTab === "attendance" ? "bg-indigo-500" : "bg-amber-500"} rounded-t-lg`}
                   style={{ height }}
                 >
-                  <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs">
+                  <span className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs whitespace-nowrap font-medium">
                     {activeTab === "attendance" 
                       ? `${value.toFixed(0)}%` 
                       : `${value.toFixed(1)}`}
                   </span>
                 </div>
               </div>
-              <span className="text-xs mt-2">{formattedDate}</span>
+              <span className="text-xs mt-2 text-gray-600">{formattedDate}</span>
             </div>
           );
         })}
@@ -134,7 +134,7 @@ const VillageStatsChart = ({ data, title }: ChartProps) => {
             <TabsTrigger value="qt">QT 현황</TabsTrigger>
           </TabsList>
           <TabsContent value="attendance" className="mt-4">
-            <CardContent className="px-2">
+            <CardContent className="px-6">
               {renderBarChart()}
               <div className="mt-8 mb-4 border-t pt-4">
                 <h4 className="font-medium text-sm mb-4">주간 출석률 추이</h4>
@@ -143,7 +143,7 @@ const VillageStatsChart = ({ data, title }: ChartProps) => {
             </CardContent>
           </TabsContent>
           <TabsContent value="qt" className="mt-4">
-            <CardContent className="px-2">
+            <CardContent className="px-6">
               {renderBarChart()}
               <div className="mt-8 mb-4 border-t pt-4">
                 <h4 className="font-medium text-sm mb-4">주간 QT 평균 추이</h4>
