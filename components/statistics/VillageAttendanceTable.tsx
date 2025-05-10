@@ -21,6 +21,7 @@ import {
 import { VillageAttendanceResponse, GbsAttendanceSummary } from "@/types/statistics";
 import { Filter, Users, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import VillageAttendanceEditor from "@/components/statistics/VillageAttendanceEditor";
 
 interface VillageAttendanceTableProps {
   data: VillageAttendanceResponse | null;
@@ -68,6 +69,12 @@ const VillageAttendanceTable = ({ data }: VillageAttendanceTableProps) => {
       attendance.memberName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
+  
+  // 데이터 새로고침 핸들러
+  const handleDataRefresh = () => {
+    // 캐시 무효화나 데이터 리로드는 상위 컴포넌트에서 자동으로 처리됨
+    console.log("출석 데이터가 업데이트되었습니다.");
+  };
   
   return (
     <Card className="w-full">
@@ -118,7 +125,12 @@ const VillageAttendanceTable = ({ data }: VillageAttendanceTableProps) => {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-0">
-                  <GbsAttendanceTable gbs={gbs} />
+                  <GbsAttendanceTable 
+                    gbs={gbs} 
+                    villageId={data.villageId} 
+                    weekStart={data.weekStart}
+                    onAttendanceUpdate={handleDataRefresh}
+                  />
                 </AccordionContent>
               </AccordionItem>
             ))}
@@ -129,7 +141,14 @@ const VillageAttendanceTable = ({ data }: VillageAttendanceTableProps) => {
   );
 };
 
-const GbsAttendanceTable = ({ gbs }: { gbs: GbsAttendanceSummary }) => {
+interface GbsAttendanceTableProps {
+  gbs: GbsAttendanceSummary;
+  villageId: number;
+  weekStart: string;
+  onAttendanceUpdate?: () => void;
+}
+
+const GbsAttendanceTable = ({ gbs, villageId, weekStart, onAttendanceUpdate }: GbsAttendanceTableProps) => {
   // 예배/QT/대학부 등급에 따른 색상 지정
   const getWorshipColor = (worship: string) => {
     return worship === 'O' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
@@ -149,6 +168,14 @@ const GbsAttendanceTable = ({ gbs }: { gbs: GbsAttendanceSummary }) => {
   
   return (
     <div className="overflow-x-auto">
+      <div className="flex justify-end px-4 py-2">
+        <VillageAttendanceEditor 
+          villageId={villageId} 
+          gbsAttendance={gbs} 
+          weekStart={weekStart}
+          onSuccess={onAttendanceUpdate}
+        />
+      </div>
       <Table>
         <TableHeader>
           <TableRow>

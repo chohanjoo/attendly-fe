@@ -102,6 +102,16 @@ export default function VillagePage() {
     setWeekStart(week);
   };
   
+  // 출석 데이터 업데이트 후 리로드 핸들러
+  const handleAttendanceDataRefresh = async () => {
+    if (!villageId) return;
+    
+    setIsLoadingAttendance(true);
+    const data = await fetchVillageAttendance(villageId, weekStart);
+    setVillageAttendance(data);
+    setIsLoadingAttendance(false);
+  };
+  
   // 주차 옵션 생성 (지난 8주)
   const weekOptions = useMemo(() => {
     const weeks = [];
@@ -238,7 +248,9 @@ export default function VillagePage() {
               </div>
             ) : (
               <div className="mb-6">
-                <VillageAttendanceTable data={villageAttendance} />
+                <VillageAttendanceTable 
+                  data={villageAttendance} 
+                />
               </div>
             )}
           </TabsContent>
