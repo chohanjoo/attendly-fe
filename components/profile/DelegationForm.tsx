@@ -38,7 +38,7 @@ import { format as dateFormat } from "date-fns";
 import { ko } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useCreateDelegation } from "@/hooks/use-delegation";
-import { LeaderInfo, GbsInfo, DelegationFormValues } from "../types";
+import { LeaderInfo, GbsInfo, DelegationFormValues } from "../../types/profile";
 
 // 위임 폼 스키마 정의
 const delegationFormSchema = z.object({

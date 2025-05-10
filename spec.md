@@ -178,4 +178,4 @@
 
 ---
 
-> **다음 단계**: 컴포넌트별 props 타입 정의 (`types.ts`), Storybook 스텁 작성, 폴더 구조 확정 (e.g. `/features/attendance`, `/components/common`).
+> **다음 단계**: 컴포넌트별 props 타입 정의 (`profile.ts`), Storybook 스텁 작성, 폴더 구조 확정 (e.g. `/features/attendance`, `/components/common`).

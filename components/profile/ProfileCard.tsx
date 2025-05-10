@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Mail, User as UserIcon, Calendar, Shield, UserCircle } from "lucide-react";
-import { UserDetails, getRoleColor, roleTranslations } from "../types";
+import { UserDetails, getRoleColor, roleTranslations } from "../../types/profile";
 
 interface ProfileCardProps {
   userDetails: UserDetails;

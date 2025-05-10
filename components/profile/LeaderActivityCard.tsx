@@ -6,7 +6,7 @@ import { GbsMembersModal } from "./GbsMembersModal";
 import { DelegationForm } from "./DelegationForm";
 import { DelegationStatus } from "./DelegationStatus";
 import { GbsHistory } from "./GbsHistory";
-import { LeaderInfo, GbsInfo } from "../types";
+import { LeaderInfo, GbsInfo } from "../../types/profile";
 
 interface LeaderActivityCardProps {
   userId: number;

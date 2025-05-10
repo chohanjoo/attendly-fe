@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { UserDetails, roleTranslations } from "../types";
+import { UserDetails, roleTranslations } from "../../types/profile";
 
 interface ProfileDetailTabsProps {
   userDetails: UserDetails;

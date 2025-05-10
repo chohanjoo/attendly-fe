@@ -8,10 +8,10 @@ import { AppShellLayout } from "@/components/layouts/app-shell-layout";
 import api from "@/lib/axios";
 import { useLeaderGbsHistory } from "@/hooks/use-attendance";
 import { useActiveDelegations } from "@/hooks/use-delegation";
-import { UserDetails, LeaderInfo, GbsInfo } from "./types";
-import { ProfileCard } from "./components/ProfileCard";
-import { ProfileDetailTabs } from "./components/ProfileDetailTabs";
-import { LeaderActivityCard } from "./components/LeaderActivityCard";
+import { UserDetails, LeaderInfo, GbsInfo } from "../../types/profile";
+import { ProfileCard } from "../../components/profile/ProfileCard";
+import { ProfileDetailTabs } from "../../components/profile/ProfileDetailTabs";
+import { LeaderActivityCard } from "../../components/profile/LeaderActivityCard";
 
 export default function ProfilePage() {
   const { user } = useAuth();
