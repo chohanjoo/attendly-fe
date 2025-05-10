@@ -246,7 +246,7 @@ export default function GbsStatisticsPage() {
                           <LineChart data={getWeeklyChartData()}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="weekStart" />
-                            <YAxis yAxisId="left" orientation="left" />
+                            <YAxis yAxisId="left" orientation="left" domain={[0, 100]} />
                             <YAxis yAxisId="right" orientation="right" />
                             <Tooltip />
                             <Legend />
