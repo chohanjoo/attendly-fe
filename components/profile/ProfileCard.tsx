@@ -22,7 +22,7 @@ export const ProfileCard = ({ userDetails }: ProfileCardProps) => {
         </div>
         <CardTitle className="text-xl">{userDetails.name}</CardTitle>
         <div className="flex justify-center mt-2">
-          <Badge variant="outline" className={`${getRoleColor(userDetails.role)} text-white`}>
+          <Badge variant="outline" className={`${getRoleColor(userDetails.role)} text-black`}>
             {roleTranslations[userDetails.role] || userDetails.role}
           </Badge>
         </div>

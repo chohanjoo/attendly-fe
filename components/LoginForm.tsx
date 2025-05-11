@@ -54,7 +54,7 @@ export default function LoginForm() {
     } else if (role === "LEADER") {
       targetPath = '/attendance'; // 리더는 출석 페이지로
     } else if (role === "MINISTER" || role === "ADMIN") {
-      targetPath = '/reports'; // 교역자와 관리자는 통계 페이지로
+      targetPath = '/admin'; // 교역자와 관리자는 통계 페이지로
     }
     
     // 경로 리다이렉트

@@ -15,7 +15,7 @@ const staticExtensions = [
 const roleBasedHomePage = {
   'VILLAGE_LEADER': '/village',
   'LEADER': '/attendance',
-  'MINISTER': '/reports',
+  'MINISTER': '/admin',
   'ADMIN': '/admin',
   'MEMBER': '/'
 };
