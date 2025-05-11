@@ -35,12 +35,12 @@ export type UserResponse = {
   updatedAt: string
 }
 
-export const useUsers = (page: number, size: number, search: string) => {
+export const useUsers = (page: number, size: number, name: string) => {
   return useQuery({
-    queryKey: ["admin", "users", page, size, search],
+    queryKey: ["admin", "users", page, size, name],
     queryFn: async () => {
       const response = await api.get("/api/admin/users", {
-        params: { page, size: size, search },
+        params: { page, size: size, name: name },
       });
       return response.data.data;
     },

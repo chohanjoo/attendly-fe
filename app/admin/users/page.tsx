@@ -33,14 +33,14 @@ import { useUsers, User } from "@/hooks/use-users"
 export default function UsersPage() {
   const [page, setPage] = useState(0)
   const [size, setSize] = useState(10)
-  const [search, setSearch] = useState("")
+  const [name, setName] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
 
   const { data, isLoading, isError } = useUsers(page, size, debouncedSearch)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    setDebouncedSearch(search)
+    setDebouncedSearch(name)
     setPage(0)
   }
 
@@ -132,8 +132,8 @@ export default function UsersPage() {
               type="search"
               placeholder="이름 또는 이메일 검색..."
               className="pl-8"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
           <Button type="submit">검색</Button>
