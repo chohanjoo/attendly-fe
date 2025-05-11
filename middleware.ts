@@ -16,7 +16,7 @@ const roleBasedHomePage = {
   'VILLAGE_LEADER': '/village',
   'LEADER': '/attendance',
   'MINISTER': '/reports',
-  'ADMIN': '/reports',
+  'ADMIN': '/admin',
   'MEMBER': '/'
 };
 

@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import axios from "axios"
-import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
@@ -40,33 +37,24 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Save, Trash2 } from "lucide-react"
 import Link from "next/link"
-import { toast } from "sonner"
 
-const userFormSchema = z.object({
-  name: z.string().min(2, { message: "이름은 2글자 이상이어야 합니다." }),
-  email: z.string().email({ message: "유효한 이메일 주소를 입력해주세요." }),
-  role: z.string(),
-  status: z.enum(["active", "inactive", "pending"]),
-})
-
-type UserFormValues = z.infer<typeof userFormSchema>
-
-const fetchUser = async (id: string) => {
-  const response = await axios.get(`/api/admin/users/${id}`)
-  return response.data
-}
+import {
+  userFormSchema,
+  type UserFormValues,
+  useUser,
+  useUpdateUser,
+  useDeleteUser
+} from "@/hooks/use-users"
 
 export default function UserDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const queryClient = useQueryClient()
   const id = params.id as string
   const [activeTab, setActiveTab] = useState("details")
 
-  const { data: user, isLoading, isError } = useQuery({
-    queryKey: ["admin", "user", id],
-    queryFn: () => fetchUser(id),
-  })
+  const { data: user, isLoading, isError } = useUser(id)
+  const updateMutation = useUpdateUser(id)
+  const deleteMutation = useDeleteUser(id, () => router.push("/admin/users"))
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
@@ -88,33 +76,6 @@ export default function UserDetailPage() {
       })
     }
   }, [user, form])
-
-  const updateMutation = useMutation({
-    mutationFn: (values: UserFormValues) => {
-      return axios.put(`/api/admin/users/${id}`, values)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "user", id] })
-      queryClient.invalidateQueries({ queryKey: ["admin", "users"] })
-      toast.success("사용자 정보가 업데이트되었습니다.")
-    },
-    onError: () => {
-      toast.error("사용자 정보 업데이트에 실패했습니다.")
-    },
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: () => {
-      return axios.delete(`/api/admin/users/${id}`)
-    },
-    onSuccess: () => {
-      toast.success("사용자가 삭제되었습니다.")
-      router.push("/admin/users")
-    },
-    onError: () => {
-      toast.error("사용자 삭제에 실패했습니다.")
-    },
-  })
 
   const onSubmit = (values: UserFormValues) => {
     updateMutation.mutate(values)

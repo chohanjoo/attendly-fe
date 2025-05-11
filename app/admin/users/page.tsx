@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,23 +28,7 @@ import {
 } from "@/components/ui/select"
 import { UserPlus, Search, Filter } from "lucide-react"
 import Link from "next/link"
-import axios from "axios"
-
-type User = {
-  id: number
-  name: string
-  email: string
-  role: string
-  status: "active" | "inactive" | "pending"
-  createdAt: string
-}
-
-const fetchUsers = async (page: number, limit: number, search: string) => {
-  const response = await axios.get("/api/admin/users", {
-    params: { page, limit, search },
-  })
-  return response.data
-}
+import { useUsers, User } from "@/hooks/use-users"
 
 export default function UsersPage() {
   const [page, setPage] = useState(1)
@@ -53,10 +36,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["admin", "users", page, limit, debouncedSearch],
-    queryFn: () => fetchUsers(page, limit, debouncedSearch),
-  })
+  const { data, isLoading, isError } = useUsers(page, limit, debouncedSearch)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

@@ -4,9 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { QueryClientProvider } from "@/components/query-client-provider"
 import { AuthProvider } from "@/hooks/use-auth"
 import { ToastContainer } from "@/components/ui/toast-container"
-import AdminSidebar from "@/components/admin/sidebar"
-import AdminHeader from "@/components/admin/header"
 import { cn } from "@/lib/utils"
+import AdminLayoutWrapper from "@/components/admin/client-wrapper"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -22,7 +21,7 @@ export default function AdminLayout({
 }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className={cn(inter.className, "min-h-screen")}>
+      <body className={cn(inter.className, "min-h-screen")} suppressHydrationWarning>
         <QueryClientProvider>
           <AuthProvider>
             <ThemeProvider
@@ -31,15 +30,9 @@ export default function AdminLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <div className="flex h-screen overflow-hidden">
-                <AdminSidebar />
-                <div className="flex flex-col flex-1 overflow-hidden">
-                  <AdminHeader />
-                  <main className="flex-1 overflow-auto p-6">
-                    {children}
-                  </main>
-                </div>
-              </div>
+              <AdminLayoutWrapper>
+                {children}
+              </AdminLayoutWrapper>
               <ToastContainer />
             </ThemeProvider>
           </AuthProvider>
