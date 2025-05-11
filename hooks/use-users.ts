@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ApiResponse } from "@/types/api";
 
 export const userFormSchema = z.object({
   name: z.string().min(2, { message: "이름은 2글자 이상이어야 합니다." }),
@@ -21,6 +22,19 @@ export type User = {
   createdAt: string
 }
 
+export type UserResponse = {
+  id: number
+  name: string
+  email: string
+  phoneNumber?: string
+  role: string
+  departmentId: number
+  departmentName: string
+  birthDate?: string
+  createdAt: string
+  updatedAt: string
+}
+
 export const useUsers = (page: number, limit: number, search: string) => {
   return useQuery({
     queryKey: ["admin", "users", page, limit, search],
@@ -28,7 +42,7 @@ export const useUsers = (page: number, limit: number, search: string) => {
       const response = await api.get("/api/admin/users", {
         params: { page, limit, search },
       });
-      return response.data;
+      return response.data.data;
     },
   });
 };
@@ -37,8 +51,8 @@ export const useUser = (id: string) => {
   return useQuery({
     queryKey: ["admin", "user", id],
     queryFn: async () => {
-      const response = await api.get(`/api/admin/users/${id}`);
-      return response.data;
+      const response = await api.get<ApiResponse<UserResponse>>(`/api/admin/users/${id}`);
+      return response.data.data;
     },
   });
 };

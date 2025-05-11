@@ -9,14 +9,15 @@ import {
   LeaderGbsHistoryListResponse
 } from "@/types/attendance";
 import { GbsStatistics } from "@/types/statistics";
+import { ApiResponse, ApiPageResponse, PageResponse } from "@/types/api";
 
 // 리더의 GBS 정보 조회 훅
 export const useLeaderGbs = () => {
   return useQuery({
     queryKey: ['leaderGbs'],
     queryFn: async () => {
-      const response = await api.get('/api/v1/gbs-members/my-gbs');
-      return response.data as LeaderGbsResponse;
+      const response = await api.get<ApiResponse<LeaderGbsResponse>>('/api/v1/gbs-members/my-gbs');
+      return response.data.data;
     }
   });
 };
@@ -26,8 +27,8 @@ export const useGbsMembers = (gbsId: number | null) => {
   return useQuery({
     queryKey: ['gbsMembers', gbsId],
     queryFn: async () => {
-      const response = await api.get(`/api/v1/gbs-members/${gbsId}`);
-      return response.data as GbsMembersListResponse;
+      const response = await api.get<ApiResponse<GbsMembersListResponse>>(`/api/v1/gbs-members/${gbsId}`);
+      return response.data.data;
     },
     enabled: !!gbsId
   });
@@ -38,10 +39,10 @@ export const useAttendance = (gbsId: number | null, weekStart: string) => {
   return useQuery({
     queryKey: ['attendance', gbsId, weekStart],
     queryFn: async () => {
-      const response = await api.get('/api/attendance', {
+      const response = await api.get<ApiPageResponse<AttendanceResponse>>('/api/attendance', {
         params: { gbsId, weekStart }
       });
-      return response.data as AttendanceResponse[];
+      return response.data.data.items;
     },
     enabled: !!gbsId
   });
@@ -54,8 +55,8 @@ export const useSaveAttendance = () => {
   return useMutation({
     mutationFn: async (data: AttendanceBatchRequest) => {
       try {
-        const response = await api.post('/api/attendance', data);
-        return response.data;
+        const response = await api.post<ApiPageResponse<AttendanceResponse>>('/api/attendance', data);
+        return response.data.data;
       } catch (error: any) {
         console.error('출석 저장 오류 상세 정보:', {
           statusCode: error.response?.status,
@@ -89,8 +90,8 @@ export const useLeaderGbsHistory = (leaderId: number | null) => {
   return useQuery({
     queryKey: ['leaderGbsHistory', leaderId],
     queryFn: async () => {
-      const response = await api.get(`/api/v1/gbs-members/leaders/${leaderId}/history`);
-      return response.data as LeaderGbsHistoryListResponse;
+      const response = await api.get<ApiResponse<LeaderGbsHistoryListResponse>>(`/api/v1/gbs-members/leaders/${leaderId}/history`);
+      return response.data.data;
     },
     enabled: !!leaderId
   });
@@ -101,10 +102,10 @@ export const useGbsStatistics = (gbsId: number | null, startDate: string, endDat
   return useQuery({
     queryKey: ['gbsStatistics', gbsId, startDate, endDate],
     queryFn: async () => {
-      const response = await api.get(`/api/gbs/${gbsId}/report`, {
+      const response = await api.get<ApiResponse<GbsStatistics>>(`/api/gbs/${gbsId}/report`, {
         params: { startDate, endDate }
       });
-      return response.data as GbsStatistics;
+      return response.data.data;
     },
     enabled: !!gbsId && !!startDate && !!endDate
   });

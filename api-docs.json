@@ -30,6 +30,18 @@
             "description": "출석 입력 및 조회 API"
         },
         {
+            "name": "관리자-조직구조",
+            "description": "관리자 전용 조직 구조 관리 API"
+        },
+        {
+            "name": "관리자-배치작업",
+            "description": "관리자 전용 배치 작업 관리 API"
+        },
+        {
+            "name": "관리자 로그 API",
+            "description": "시스템 로그 조회 관련 API"
+        },
+        {
             "name": "사용자",
             "description": "사용자 관련 API"
         },
@@ -40,9 +52,357 @@
         {
             "name": "마을장 API",
             "description": "마을장을 위한 API"
+        },
+        {
+            "name": "관리자-시스템설정",
+            "description": "관리자 전용 시스템 설정 관리 API"
+        },
+        {
+            "name": "마을장 관리 API",
+            "description": "마을장 지정/해제 등의 관리 기능을 제공하는 API"
+        },
+        {
+            "name": "관리자-사용자",
+            "description": "관리자 전용 사용자 관리 API"
         }
     ],
     "paths": {
+        "/api/admin/users/{userId}": {
+            "get": {
+                "tags": [
+                    "관리자-사용자"
+                ],
+                "summary": "사용자 조회",
+                "description": "특정 사용자 정보를 조회합니다",
+                "operationId": "getUser",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseUserResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "관리자-사용자"
+                ],
+                "summary": "사용자 수정",
+                "description": "사용자 정보를 수정합니다",
+                "operationId": "updateUser",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserUpdateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseUserResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "관리자-사용자"
+                ],
+                "summary": "사용자 삭제",
+                "description": "사용자를 삭제합니다",
+                "operationId": "deleteUser",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/villages/{villageId}": {
+            "put": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "마을 수정",
+                "description": "마을 정보를 수정합니다",
+                "operationId": "updateVillage",
+                "parameters": [
+                    {
+                        "name": "villageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VillageUpdateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVillageResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/gbs-groups/{gbsGroupId}": {
+            "put": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "GBS 그룹 수정",
+                "description": "GBS 그룹 정보를 수정합니다",
+                "operationId": "updateGbsGroup",
+                "parameters": [
+                    {
+                        "name": "gbsGroupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GbsGroupUpdateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseGbsGroupResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/departments/{departmentId}": {
+            "get": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "부서 조회",
+                "description": "특정 부서 정보를 조회합니다",
+                "operationId": "getDepartment",
+                "parameters": [
+                    {
+                        "name": "departmentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseDepartmentResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "부서 수정",
+                "description": "부서 정보를 수정합니다",
+                "operationId": "updateDepartment",
+                "parameters": [
+                    {
+                        "name": "departmentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DepartmentUpdateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseDepartmentResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "부서 삭제",
+                "description": "부서를 삭제합니다",
+                "operationId": "deleteDepartment",
+                "parameters": [
+                    {
+                        "name": "departmentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/auth/signup": {
             "post": {
                 "tags": [
@@ -51,13 +411,6 @@
                 "summary": "회원가입",
                 "description": "새로운 사용자를 등록합니다.",
                 "operationId": "signup",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -74,7 +427,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/SignupResponse"
+                                    "$ref": "#/components/schemas/ApiResponseSignupResponse"
                                 }
                             }
                         }
@@ -90,13 +443,6 @@
                 "summary": "토큰 갱신",
                 "description": "리프레시 토큰을 사용하여 새로운 엑세스 토큰과 리프레시 토큰을 발급받습니다.",
                 "operationId": "refreshToken",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -113,7 +459,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/TokenRefreshResponse"
+                                    "$ref": "#/components/schemas/ApiResponseTokenRefreshResponse"
                                 }
                             }
                         }
@@ -129,13 +475,6 @@
                 "summary": "로그인",
                 "description": "이메일과 비밀번호로 로그인하여 JWT 토큰을 발급받습니다.",
                 "operationId": "login",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -152,7 +491,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LoginResponse"
+                                    "$ref": "#/components/schemas/ApiResponseLoginResponse"
                                 }
                             }
                         }
@@ -177,11 +516,6 @@
                             "type": "integer",
                             "format": "int64"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "requestBody": {
@@ -200,10 +534,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AttendanceResponse"
-                                    }
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseAttendanceResponse"
                                 }
                             }
                         }
@@ -224,13 +555,6 @@
                 "summary": "역할별 사용자 목록 조회",
                 "description": "지정된 역할을 가진 사용자 목록을 조회합니다",
                 "operationId": "getUsersByRoles",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -247,7 +571,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/UserListByRolesResponse"
+                                    "$ref": "#/components/schemas/ApiResponseUserListByRolesResponse"
                                 }
                             }
                         }
@@ -266,13 +590,6 @@
                     "leader-delegation-controller"
                 ],
                 "operationId": "createDelegation",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -289,7 +606,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LeaderDelegationResponse"
+                                    "$ref": "#/components/schemas/ApiResponseLeaderDelegationResponse"
                                 }
                             }
                         }
@@ -323,11 +640,6 @@
                             "type": "string",
                             "format": "date"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -336,10 +648,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AttendanceResponse"
-                                    }
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseAttendanceResponse"
                                 }
                             }
                         }
@@ -358,13 +667,6 @@
                 "summary": "출석 일괄 등록",
                 "description": "리더 권한으로 출석 데이터를 일괄 등록합니다.",
                 "operationId": "createAttendances",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -381,10 +683,968 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/AttendanceResponse"
-                                    }
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseAttendanceResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/village-leader": {
+            "post": {
+                "tags": [
+                    "마을장 관리 API"
+                ],
+                "summary": "마을장 등록",
+                "description": "특정 사용자를 특정 마을의 마을장으로 등록합니다. 이미 해당 마을에 마을장이 있는 경우 현재 마을장은 자동으로 해제됩니다.",
+                "operationId": "assignVillageLeader",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VillageLeaderAssignRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVillageLeaderResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/users": {
+            "get": {
+                "tags": [
+                    "관리자-사용자"
+                ],
+                "summary": "사용자 목록 조회",
+                "description": "사용자 목록을 페이징하여 조회합니다",
+                "operationId": "getAllUsers",
+                "parameters": [
+                    {
+                        "name": "pageable",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Pageable"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseUserResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "관리자-사용자"
+                ],
+                "summary": "사용자 생성",
+                "description": "새로운 사용자를 생성합니다",
+                "operationId": "createUser",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseUserResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users/{userId}/reset-password": {
+            "post": {
+                "tags": [
+                    "관리자-사용자"
+                ],
+                "summary": "비밀번호 초기화",
+                "description": "사용자의 비밀번호를 초기화합니다",
+                "operationId": "resetPassword",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserPasswordResetRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users/bulk": {
+            "post": {
+                "tags": [
+                    "관리자-사용자"
+                ],
+                "summary": "사용자 일괄 등록",
+                "description": "여러 사용자를 일괄적으로 등록합니다",
+                "operationId": "bulkCreateUsers",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserBulkCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseUserBulkCreateResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/system/slack-settings": {
+            "post": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "Slack 설정 저장",
+                "description": "Slack 알림 설정을 저장합니다",
+                "operationId": "saveSlackSettings",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SlackSettingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/system/settings": {
+            "get": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "모든 시스템 설정 조회",
+                "description": "모든 시스템 설정을 조회합니다",
+                "operationId": "getAllSystemSettings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseSystemSettingListResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "시스템 설정 저장",
+                "description": "시스템 설정을 저장합니다",
+                "operationId": "saveSystemSetting",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SystemSettingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseSystemSettingResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/system/security-policies": {
+            "post": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "보안 정책 설정 저장",
+                "description": "보안 정책 설정을 저장합니다",
+                "operationId": "saveSecurityPolicies",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SecurityPolicyRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/system/email-settings": {
+            "get": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "이메일 설정 조회",
+                "description": "이메일 서비스 설정을 조회합니다",
+                "operationId": "getEmailSettings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseEmailSettingRequest"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "이메일 설정 저장",
+                "description": "이메일 서비스 설정을 저장합니다",
+                "operationId": "saveEmailSettings",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmailSettingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/system/batch-settings": {
+            "post": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "배치 작업 설정 저장",
+                "description": "배치 작업 관련 설정을 저장합니다",
+                "operationId": "saveBatchSettings",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchSettingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/system/attendance-settings": {
+            "post": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "출석 입력 설정 저장",
+                "description": "출석 입력 관련 설정을 저장합니다",
+                "operationId": "saveAttendanceSettings",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AttendanceSettingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/villages": {
+            "post": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "마을 생성",
+                "description": "새로운 마을을 생성합니다",
+                "operationId": "createVillage",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/VillageCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVillageResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/reorganization": {
+            "post": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "GBS 6개월 주기 재편성 실행",
+                "description": "GBS 그룹의 6개월 주기 재편성을 실행합니다",
+                "operationId": "executeGbsReorganization",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GbsReorganizationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseGbsReorganizationResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/gbs-groups": {
+            "post": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "GBS 그룹 생성",
+                "description": "새로운 GBS 그룹을 생성합니다",
+                "operationId": "createGbsGroup",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GbsGroupCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseGbsGroupResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/gbs-groups/{gbsGroupId}/members": {
+            "post": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "GBS 그룹에 조원 배정",
+                "description": "GBS 그룹에 조원을 배정합니다",
+                "operationId": "assignMemberToGbs",
+                "parameters": [
+                    {
+                        "name": "gbsGroupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GbsMemberAssignRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/gbs-groups/{gbsGroupId}/leaders": {
+            "post": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "GBS 그룹에 리더 배정",
+                "description": "GBS 그룹에 리더를 배정합니다",
+                "operationId": "assignLeaderToGbs",
+                "parameters": [
+                    {
+                        "name": "gbsGroupId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GbsLeaderAssignRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/organization/departments": {
+            "get": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "부서 목록 조회",
+                "description": "모든 부서를 조회합니다",
+                "operationId": "getAllDepartments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseDepartmentResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "관리자-조직구조"
+                ],
+                "summary": "부서 생성",
+                "description": "새로운 부서를 생성합니다",
+                "operationId": "createDepartment",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DepartmentCreateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseDepartmentResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/batch/jobs": {
+            "get": {
+                "tags": [
+                    "관리자-배치작업"
+                ],
+                "summary": "배치 작업 목록 조회",
+                "description": "배치 작업 목록을 페이징하여 조회합니다",
+                "operationId": "getBatchJobs",
+                "parameters": [
+                    {
+                        "name": "jobType",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "GBS_REORGANIZATION",
+                                "STATISTICS_GENERATION",
+                                "REMINDER",
+                                "DATA_BACKUP"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "QUEUED",
+                                "RUNNING",
+                                "COMPLETED",
+                                "FAILED",
+                                "CANCELLED"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "startDateFrom",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "startDateTo",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "endDateFrom",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "endDateTo",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "pageable",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/Pageable"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseBatchJobResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "관리자-배치작업"
+                ],
+                "summary": "배치 작업 생성",
+                "description": "새로운 배치 작업을 생성합니다",
+                "operationId": "createBatchJob",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchJobRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseBatchJobResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/batch/jobs/{jobId}/restart": {
+            "post": {
+                "tags": [
+                    "관리자-배치작업"
+                ],
+                "summary": "배치 작업 재시작",
+                "description": "완료되거나 실패한 배치 작업을 재시작합니다",
+                "operationId": "restartBatchJob",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchJobRestartRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseBatchJobResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/batch/jobs/{jobId}/cancel": {
+            "post": {
+                "tags": [
+                    "관리자-배치작업"
+                ],
+                "summary": "배치 작업 취소",
+                "description": "실행 중이거나 대기 중인 배치 작업을 취소합니다",
+                "operationId": "cancelBatchJob",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BatchJobCancelRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseBatchJobResponse"
                                 }
                             }
                         }
@@ -405,20 +1665,13 @@
                 "summary": "현재 사용자 정보 조회",
                 "description": "현재 인증된 사용자의 정보를 조회합니다.",
                 "operationId": "getCurrentUser",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/UserResponse"
+                                    "$ref": "#/components/schemas/ApiResponseUserResponse"
                                 }
                             }
                         }
@@ -461,11 +1714,6 @@
                             "type": "string",
                             "format": "date"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -474,7 +1722,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/VillageStatistics"
+                                    "$ref": "#/components/schemas/ApiResponseVillageStatistics"
                                 }
                             }
                         }
@@ -513,11 +1761,6 @@
                             "type": "string",
                             "format": "date"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -526,7 +1769,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/VillageAttendanceResponse"
+                                    "$ref": "#/components/schemas/ApiResponseVillageAttendanceResponse"
                                 }
                             }
                         }
@@ -565,11 +1808,6 @@
                             "type": "string",
                             "format": "date"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -578,7 +1816,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/VillageGbsInfoResponse"
+                                    "$ref": "#/components/schemas/ApiResponseVillageGbsInfoResponse"
                                 }
                             }
                         }
@@ -612,11 +1850,6 @@
                             "type": "string",
                             "format": "date"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -625,7 +1858,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/GbsMembersListResponse"
+                                    "$ref": "#/components/schemas/ApiResponseGbsMembersListResponse"
                                 }
                             }
                         }
@@ -641,20 +1874,13 @@
                 "summary": "로그인한 리더의 GBS 조회",
                 "description": "현재 로그인한 리더가 담당하는 GBS 정보를 조회합니다.",
                 "operationId": "getMyGbs",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LeaderGbsResponse"
+                                    "$ref": "#/components/schemas/ApiResponseLeaderGbsResponse"
                                 }
                             }
                         }
@@ -679,11 +1905,6 @@
                             "type": "integer",
                             "format": "int64"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -692,7 +1913,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/LeaderGbsHistoryListResponse"
+                                    "$ref": "#/components/schemas/ApiResponseLeaderGbsHistoryListResponse"
                                 }
                             }
                         }
@@ -708,20 +1929,13 @@
                 "summary": "현재 사용자의 마을 정보 조회",
                 "description": "현재 로그인한 사용자가 속한 마을 정보를 조회합니다",
                 "operationId": "getCurrentUserVillage",
-                "parameters": [
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/UserVillageResponse"
+                                    "$ref": "#/components/schemas/ApiResponseUserVillageResponse"
                                 }
                             }
                         }
@@ -748,11 +1962,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -783,11 +1992,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -818,11 +2022,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -853,11 +2052,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -888,11 +2082,6 @@
                         "schema": {
                             "type": "string"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -944,11 +2133,6 @@
                             "type": "string",
                             "format": "date"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -957,7 +2141,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/GbsStatistics"
+                                    "$ref": "#/components/schemas/ApiResponseGbsStatistics"
                                 }
                             }
                         }
@@ -1005,11 +2189,6 @@
                             "type": "string",
                             "format": "date"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -1018,7 +2197,7 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/DepartmentStatistics"
+                                    "$ref": "#/components/schemas/ApiResponseDepartmentStatistics"
                                 }
                             }
                         }
@@ -1055,11 +2234,6 @@
                             "type": "string",
                             "format": "date"
                         }
-                    },
-                    {
-                        "name": "X-Request-ID",
-                        "in": "header",
-                        "$ref": "#/components/parameters/X-Request-ID"
                     }
                 ],
                 "responses": {
@@ -1068,20 +2242,824 @@
                         "content": {
                             "*/*": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/LeaderDelegationResponse"
-                                    }
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseLeaderDelegationResponse"
                                 }
                             }
                         }
                     }
                 }
             }
+        },
+        "/api/admin/village-leader/{villageId}": {
+            "get": {
+                "tags": [
+                    "마을장 관리 API"
+                ],
+                "summary": "마을장 조회",
+                "description": "특정 마을의 현재 마을장 정보를 조회합니다.",
+                "operationId": "getVillageLeader",
+                "parameters": [
+                    {
+                        "name": "villageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVillageLeaderResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "마을장 관리 API"
+                ],
+                "summary": "마을장 해제",
+                "description": "특정 마을의 현재 마을장을 해제합니다.",
+                "operationId": "terminateVillageLeader",
+                "parameters": [
+                    {
+                        "name": "villageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "endDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVillageLeaderResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/system/settings/{key}": {
+            "get": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "시스템 설정 조회",
+                "description": "특정 시스템 설정을 조회합니다",
+                "operationId": "getSystemSetting",
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseSystemSettingResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "관리자-시스템설정"
+                ],
+                "summary": "시스템 설정 삭제",
+                "description": "시스템 설정을 삭제합니다",
+                "operationId": "deleteSystemSetting",
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/logs": {
+            "get": {
+                "tags": [
+                    "관리자 로그 API"
+                ],
+                "summary": "시스템 로그 조회",
+                "description": "조건별 시스템 로그를 조회합니다 (관리자 전용)",
+                "operationId": "getLogs",
+                "parameters": [
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "startTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 20
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "timestamp,desc"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseSystemLogResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/logs/{id}": {
+            "get": {
+                "tags": [
+                    "관리자 로그 API"
+                ],
+                "summary": "시스템 로그 단건 조회",
+                "description": "특정 ID의 시스템 로그를 조회합니다 (관리자 전용)",
+                "operationId": "getLogById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseSystemLogResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/logs/levels": {
+            "get": {
+                "tags": [
+                    "관리자 로그 API"
+                ],
+                "summary": "로그 레벨 목록 조회",
+                "description": "시스템에 등록된 모든 로그 레벨을 조회합니다 (관리자 전용)",
+                "operationId": "getLogLevels",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListString"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/logs/categories": {
+            "get": {
+                "tags": [
+                    "관리자 로그 API"
+                ],
+                "summary": "로그 카테고리 목록 조회",
+                "description": "시스템에 등록된 모든 로그 카테고리를 조회합니다 (관리자 전용)",
+                "operationId": "getLogCategories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListString"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/batch/jobs/{jobId}": {
+            "get": {
+                "tags": [
+                    "관리자-배치작업"
+                ],
+                "summary": "배치 작업 조회",
+                "description": "특정 배치 작업을 조회합니다",
+                "operationId": "getBatchJob",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseBatchJobResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/batch/jobs/{jobId}/logs": {
+            "get": {
+                "tags": [
+                    "관리자-배치작업"
+                ],
+                "summary": "배치 작업 로그 조회",
+                "description": "특정 배치 작업의 실행 로그를 조회합니다",
+                "operationId": "getBatchJobLogs",
+                "parameters": [
+                    {
+                        "name": "jobId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePageResponseBatchLogResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "schemas": {
+            "UserUpdateRequest": {
+                "required": [
+                    "name"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "pattern": "^\\d{3}-?\\d{3,4}-?\\d{4}$",
+                        "type": "string"
+                    },
+                    "birthDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "ADMIN",
+                            "MINISTER",
+                            "VILLAGE_LEADER",
+                            "LEADER",
+                            "MEMBER"
+                        ]
+                    },
+                    "departmentId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ApiResponseUserResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/UserResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "UserResponse": {
+                "required": [
+                    "createdAt",
+                    "departmentId",
+                    "departmentName",
+                    "id",
+                    "name",
+                    "role",
+                    "updatedAt"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "ADMIN",
+                            "MINISTER",
+                            "VILLAGE_LEADER",
+                            "LEADER",
+                            "MEMBER"
+                        ]
+                    },
+                    "departmentId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "departmentName": {
+                        "type": "string"
+                    },
+                    "birthDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "VillageUpdateRequest": {
+                "required": [
+                    "name"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    },
+                    "departmentId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "villageLeaderId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ApiResponseVillageResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/VillageResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "VillageResponse": {
+                "required": [
+                    "createdAt",
+                    "departmentId",
+                    "departmentName",
+                    "id",
+                    "name",
+                    "updatedAt"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "departmentId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "departmentName": {
+                        "type": "string"
+                    },
+                    "villageLeaderId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "villageLeaderName": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "GbsGroupUpdateRequest": {
+                "required": [
+                    "name"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    },
+                    "villageId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "termStartDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "termEndDate": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                }
+            },
+            "ApiResponseGbsGroupResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/GbsGroupResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "GbsGroupResponse": {
+                "required": [
+                    "createdAt",
+                    "id",
+                    "name",
+                    "termEndDate",
+                    "termStartDate",
+                    "updatedAt",
+                    "villageId",
+                    "villageName"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "villageId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "villageName": {
+                        "type": "string"
+                    },
+                    "termStartDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "termEndDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "leaderName": {
+                        "type": "string"
+                    },
+                    "leaderId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "DepartmentUpdateRequest": {
+                "required": [
+                    "name"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseDepartmentResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/DepartmentResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "DepartmentResponse": {
+                "required": [
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
             "SignupRequest": {
                 "required": [
                     "departmentId",
@@ -1118,6 +3096,34 @@
                     "departmentId": {
                         "type": "integer",
                         "format": "int64"
+                    }
+                }
+            },
+            "ApiResponseSignupResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/SignupResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },
@@ -1159,6 +3165,34 @@
                     }
                 }
             },
+            "ApiResponseTokenRefreshResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/TokenRefreshResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
             "TokenRefreshResponse": {
                 "required": [
                     "accessToken",
@@ -1186,6 +3220,34 @@
                     },
                     "password": {
                         "type": "string"
+                    }
+                }
+            },
+            "ApiResponseLoginResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/LoginResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },
@@ -1297,6 +3359,34 @@
                 },
                 "description": "마을장의 출석 수정 요청"
             },
+            "ApiResponsePageResponseAttendanceResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PageResponseAttendanceResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
             "AttendanceResponse": {
                 "required": [
                     "id",
@@ -1360,6 +3450,29 @@
                 },
                 "description": "출석 목록 응답"
             },
+            "PageResponseAttendanceResponse": {
+                "required": [
+                    "hasMore",
+                    "items",
+                    "totalCount"
+                ],
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AttendanceResponse"
+                        }
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "hasMore": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "UserListByRolesRequest": {
                 "required": [
                     "roles"
@@ -1374,6 +3487,34 @@
                     }
                 }
             },
+            "ApiResponseUserListByRolesResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/UserListByRolesResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
             "UserListByRolesResponse": {
                 "required": [
                     "users"
@@ -1385,62 +3526,6 @@
                         "items": {
                             "$ref": "#/components/schemas/UserResponse"
                         }
-                    }
-                }
-            },
-            "UserResponse": {
-                "required": [
-                    "createdAt",
-                    "departmentId",
-                    "departmentName",
-                    "id",
-                    "name",
-                    "role",
-                    "updatedAt"
-                ],
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "email": {
-                        "type": "string"
-                    },
-                    "phoneNumber": {
-                        "type": "string"
-                    },
-                    "role": {
-                        "type": "string",
-                        "enum": [
-                            "ADMIN",
-                            "MINISTER",
-                            "VILLAGE_LEADER",
-                            "LEADER",
-                            "MEMBER"
-                        ]
-                    },
-                    "departmentId": {
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    "departmentName": {
-                        "type": "string"
-                    },
-                    "birthDate": {
-                        "type": "string",
-                        "format": "date"
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updatedAt": {
-                        "type": "string",
-                        "format": "date-time"
                     }
                 }
             },
@@ -1473,6 +3558,34 @@
                     "endDate": {
                         "type": "string",
                         "format": "date"
+                    }
+                }
+            },
+            "ApiResponseLeaderDelegationResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/LeaderDelegationResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },
@@ -1603,6 +3716,918 @@
                     }
                 },
                 "description": "개별 조원 출석 데이터"
+            },
+            "VillageLeaderAssignRequest": {
+                "required": [
+                    "startDate",
+                    "userId",
+                    "villageId"
+                ],
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "integer",
+                        "description": "마을장으로 지정할 사용자 ID",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "villageId": {
+                        "type": "integer",
+                        "description": "마을장이 관리할 마을 ID",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "description": "마을장 임기 시작일",
+                        "format": "date",
+                        "example": "2023-01-01"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "description": "마을장 임기 종료일 (옵션)",
+                        "format": "date",
+                        "example": "2023-12-31"
+                    }
+                },
+                "description": "마을장 할당 요청"
+            },
+            "ApiResponseVillageLeaderResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/VillageLeaderResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "VillageLeaderResponse": {
+                "required": [
+                    "createdAt",
+                    "startDate",
+                    "updatedAt",
+                    "userId",
+                    "userName",
+                    "villageId",
+                    "villageName"
+                ],
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "integer",
+                        "description": "사용자 ID",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "userName": {
+                        "type": "string",
+                        "description": "사용자 이름",
+                        "example": "홍길동"
+                    },
+                    "villageId": {
+                        "type": "integer",
+                        "description": "마을 ID",
+                        "format": "int64",
+                        "example": 1
+                    },
+                    "villageName": {
+                        "type": "string",
+                        "description": "마을 이름",
+                        "example": "동문마을"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "description": "임기 시작일",
+                        "format": "date",
+                        "example": "2023-01-01"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "description": "임기 종료일",
+                        "format": "date",
+                        "example": "2023-12-31"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "description": "생성일시",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "description": "수정일시",
+                        "format": "date-time"
+                    }
+                },
+                "description": "마을장 정보 응답"
+            },
+            "UserCreateRequest": {
+                "required": [
+                    "departmentId",
+                    "email",
+                    "name",
+                    "password",
+                    "role"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "pattern": "^\\d{3}-?\\d{3,4}-?\\d{4}$",
+                        "type": "string"
+                    },
+                    "password": {
+                        "pattern": "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "ADMIN",
+                            "MINISTER",
+                            "VILLAGE_LEADER",
+                            "LEADER",
+                            "MEMBER"
+                        ]
+                    },
+                    "birthDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "departmentId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "UserPasswordResetRequest": {
+                "required": [
+                    "newPassword"
+                ],
+                "type": "object",
+                "properties": {
+                    "newPassword": {
+                        "pattern": "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$",
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseVoid": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "UserBulkCreateRequest": {
+                "required": [
+                    "users"
+                ],
+                "type": "object",
+                "properties": {
+                    "users": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserCreateRequest"
+                        }
+                    }
+                }
+            },
+            "ApiResponseUserBulkCreateResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/UserBulkCreateResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "UserBulkCreateResponse": {
+                "required": [
+                    "createdCount",
+                    "failedCount",
+                    "failedEmails"
+                ],
+                "type": "object",
+                "properties": {
+                    "createdCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "failedCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "failedEmails": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "SlackSettingRequest": {
+                "required": [
+                    "webhookUrl"
+                ],
+                "type": "object",
+                "properties": {
+                    "webhookUrl": {
+                        "type": "string"
+                    },
+                    "channelName": {
+                        "type": "string"
+                    },
+                    "botName": {
+                        "type": "string"
+                    },
+                    "botIconEmoji": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SystemSettingRequest": {
+                "required": [
+                    "key",
+                    "value"
+                ],
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    },
+                    "value": {
+                        "maxLength": 1000,
+                        "minLength": 0,
+                        "type": "string"
+                    },
+                    "description": {
+                        "maxLength": 200,
+                        "minLength": 0,
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseSystemSettingResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/SystemSettingResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "SystemSettingResponse": {
+                "required": [
+                    "createdAt",
+                    "id",
+                    "key",
+                    "updatedAt",
+                    "value"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "SecurityPolicyRequest": {
+                "required": [
+                    "loginAttemptLimit",
+                    "minPasswordLength",
+                    "passwordExpiryDays",
+                    "requireNumber",
+                    "requireSpecialChar",
+                    "requireUpperCase",
+                    "sessionTimeoutMinutes"
+                ],
+                "type": "object",
+                "properties": {
+                    "sessionTimeoutMinutes": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "passwordExpiryDays": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "minPasswordLength": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "requireSpecialChar": {
+                        "type": "boolean"
+                    },
+                    "requireUpperCase": {
+                        "type": "boolean"
+                    },
+                    "requireNumber": {
+                        "type": "boolean"
+                    },
+                    "loginAttemptLimit": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "EmailSettingRequest": {
+                "required": [
+                    "enableTLS",
+                    "password",
+                    "smtpPort",
+                    "smtpServer",
+                    "username"
+                ],
+                "type": "object",
+                "properties": {
+                    "smtpServer": {
+                        "type": "string"
+                    },
+                    "smtpPort": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "username": {
+                        "pattern": "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "enableTLS": {
+                        "type": "boolean"
+                    },
+                    "senderName": {
+                        "type": "string"
+                    },
+                    "emailTemplatePrefix": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BatchSettingRequest": {
+                "required": [
+                    "reminderDayOfWeek",
+                    "reminderEnabled",
+                    "reminderHour",
+                    "statisticsGenerationDayOfWeek",
+                    "statisticsGenerationEnabled",
+                    "statisticsGenerationHour"
+                ],
+                "type": "object",
+                "properties": {
+                    "reminderEnabled": {
+                        "type": "boolean"
+                    },
+                    "reminderDayOfWeek": {
+                        "type": "string",
+                        "enum": [
+                            "MONDAY",
+                            "TUESDAY",
+                            "WEDNESDAY",
+                            "THURSDAY",
+                            "FRIDAY",
+                            "SATURDAY",
+                            "SUNDAY"
+                        ]
+                    },
+                    "reminderHour": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "statisticsGenerationEnabled": {
+                        "type": "boolean"
+                    },
+                    "statisticsGenerationDayOfWeek": {
+                        "type": "string",
+                        "enum": [
+                            "MONDAY",
+                            "TUESDAY",
+                            "WEDNESDAY",
+                            "THURSDAY",
+                            "FRIDAY",
+                            "SATURDAY",
+                            "SUNDAY"
+                        ]
+                    },
+                    "statisticsGenerationHour": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "AttendanceSettingRequest": {
+                "required": [
+                    "allowMemberEdit",
+                    "attendanceInputDayOfWeek",
+                    "autoLockInputEnabled",
+                    "autolockTimeoutHours",
+                    "inputEndHour",
+                    "inputStartHour"
+                ],
+                "type": "object",
+                "properties": {
+                    "attendanceInputDayOfWeek": {
+                        "type": "string",
+                        "enum": [
+                            "MONDAY",
+                            "TUESDAY",
+                            "WEDNESDAY",
+                            "THURSDAY",
+                            "FRIDAY",
+                            "SATURDAY",
+                            "SUNDAY"
+                        ]
+                    },
+                    "inputStartHour": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "inputEndHour": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "allowMemberEdit": {
+                        "type": "boolean"
+                    },
+                    "autoLockInputEnabled": {
+                        "type": "boolean"
+                    },
+                    "autolockTimeoutHours": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "VillageCreateRequest": {
+                "required": [
+                    "departmentId",
+                    "name",
+                    "villageLeaderId"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    },
+                    "departmentId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "villageLeaderId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "GbsReorganizationRequest": {
+                "required": [
+                    "departmentId",
+                    "endDate",
+                    "startDate"
+                ],
+                "type": "object",
+                "properties": {
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "departmentId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ApiResponseGbsReorganizationResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/GbsReorganizationResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "GbsReorganizationResponse": {
+                "required": [
+                    "affectedGbsCount",
+                    "affectedLeaderCount",
+                    "affectedMemberCount",
+                    "completedAt",
+                    "departmentId",
+                    "departmentName",
+                    "endDate",
+                    "startDate"
+                ],
+                "type": "object",
+                "properties": {
+                    "departmentId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "departmentName": {
+                        "type": "string"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "affectedGbsCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "affectedMemberCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "affectedLeaderCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "completedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "GbsGroupCreateRequest": {
+                "required": [
+                    "name",
+                    "termEndDate",
+                    "termStartDate",
+                    "villageId"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    },
+                    "villageId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "termStartDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "termEndDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "leaderId": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "GbsMemberAssignRequest": {
+                "required": [
+                    "memberId",
+                    "startDate"
+                ],
+                "type": "object",
+                "properties": {
+                    "memberId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                }
+            },
+            "GbsLeaderAssignRequest": {
+                "required": [
+                    "leaderId",
+                    "startDate"
+                ],
+                "type": "object",
+                "properties": {
+                    "leaderId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "startDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                }
+            },
+            "DepartmentCreateRequest": {
+                "required": [
+                    "name"
+                ],
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "maxLength": 50,
+                        "minLength": 2,
+                        "type": "string"
+                    }
+                }
+            },
+            "BatchJobRequest": {
+                "required": [
+                    "jobType",
+                    "parameters"
+                ],
+                "type": "object",
+                "properties": {
+                    "jobType": {
+                        "type": "string",
+                        "enum": [
+                            "GBS_REORGANIZATION",
+                            "STATISTICS_GENERATION",
+                            "REMINDER",
+                            "DATA_BACKUP"
+                        ]
+                    },
+                    "parameters": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "scheduleTime": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ApiResponseBatchJobResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/BatchJobResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "BatchJobResponse": {
+                "required": [
+                    "createdAt",
+                    "id",
+                    "jobType",
+                    "parameters",
+                    "status"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "jobType": {
+                        "type": "string",
+                        "enum": [
+                            "GBS_REORGANIZATION",
+                            "STATISTICS_GENERATION",
+                            "REMINDER",
+                            "DATA_BACKUP"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "QUEUED",
+                            "RUNNING",
+                            "COMPLETED",
+                            "FAILED",
+                            "CANCELLED"
+                        ]
+                    },
+                    "parameters": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "startedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "finishedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "errorMessage": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BatchJobRestartRequest": {
+                "type": "object",
+                "properties": {
+                    "parameters": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "BatchJobCancelRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseVillageStatistics": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/VillageStatistics"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
             },
             "GbsStatistics": {
                 "required": [
@@ -1767,6 +4792,34 @@
                 },
                 "description": "주별 통계"
             },
+            "ApiResponseVillageAttendanceResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/VillageAttendanceResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
             "GbsAttendanceSummary": {
                 "required": [
                     "attendanceRate",
@@ -1858,6 +4911,34 @@
                     }
                 },
                 "description": "마을 출석 현황 응답"
+            },
+            "ApiResponseVillageGbsInfoResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/VillageGbsInfoResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
             },
             "GbsInfo": {
                 "required": [
@@ -1973,6 +5054,34 @@
                 },
                 "description": "마을내 모든 GBS 정보 응답"
             },
+            "ApiResponseGbsMembersListResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/GbsMembersListResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
             "GbsMembersListResponse": {
                 "required": [
                     "gbsId",
@@ -1998,6 +5107,34 @@
                         "items": {
                             "$ref": "#/components/schemas/GbsMemberResponse"
                         }
+                    }
+                }
+            },
+            "ApiResponseLeaderGbsResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/LeaderGbsResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },
@@ -2037,6 +5174,34 @@
                     "startDate": {
                         "type": "string",
                         "format": "date"
+                    }
+                }
+            },
+            "ApiResponseLeaderGbsHistoryListResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/LeaderGbsHistoryListResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },
@@ -2118,6 +5283,34 @@
                     }
                 }
             },
+            "ApiResponseUserVillageResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/UserVillageResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
             "UserVillageResponse": {
                 "required": [
                     "departmentId",
@@ -2153,6 +5346,62 @@
                     },
                     "isVillageLeader": {
                         "type": "boolean"
+                    }
+                }
+            },
+            "ApiResponseGbsStatistics": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/GbsStatistics"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ApiResponseDepartmentStatistics": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/DepartmentStatistics"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
                     }
                 }
             },
@@ -2226,6 +5475,541 @@
                     }
                 },
                 "description": "부서별 출석 통계"
+            },
+            "ApiResponsePageResponseLeaderDelegationResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PageResponseLeaderDelegationResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PageResponseLeaderDelegationResponse": {
+                "required": [
+                    "hasMore",
+                    "items",
+                    "totalCount"
+                ],
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LeaderDelegationResponse"
+                        }
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "hasMore": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "Pageable": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "minimum": 0,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "size": {
+                        "minimum": 1,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "sort": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ApiResponsePageResponseUserResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PageResponseUserResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PageResponseUserResponse": {
+                "required": [
+                    "hasMore",
+                    "items",
+                    "totalCount"
+                ],
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserResponse"
+                        }
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "hasMore": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ApiResponseSystemSettingListResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/SystemSettingListResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "SystemSettingListResponse": {
+                "required": [
+                    "settings",
+                    "total"
+                ],
+                "type": "object",
+                "properties": {
+                    "settings": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SystemSettingResponse"
+                        }
+                    },
+                    "total": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ApiResponseEmailSettingRequest": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/EmailSettingRequest"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ApiResponsePageResponseDepartmentResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PageResponseDepartmentResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PageResponseDepartmentResponse": {
+                "required": [
+                    "hasMore",
+                    "items",
+                    "totalCount"
+                ],
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DepartmentResponse"
+                        }
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "hasMore": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ApiResponsePageResponseSystemLogResponseDto": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PageResponseSystemLogResponseDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PageResponseSystemLogResponseDto": {
+                "required": [
+                    "hasMore",
+                    "items",
+                    "totalCount"
+                ],
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SystemLogResponseDto"
+                        }
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "hasMore": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "SystemLogResponseDto": {
+                "required": [
+                    "category",
+                    "level",
+                    "message",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "level": {
+                        "type": "string"
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "additionalInfo": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "ipAddress": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "userAgent": {
+                        "type": "string"
+                    },
+                    "serverInstance": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseSystemLogResponseDto": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/SystemLogResponseDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ApiResponseListString": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ApiResponsePageResponseBatchJobResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PageResponseBatchJobResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "PageResponseBatchJobResponse": {
+                "required": [
+                    "hasMore",
+                    "items",
+                    "totalCount"
+                ],
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BatchJobResponse"
+                        }
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "hasMore": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ApiResponsePageResponseBatchLogResponse": {
+                "required": [
+                    "code",
+                    "message",
+                    "success",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PageResponseBatchLogResponse"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "BatchLogResponse": {
+                "required": [
+                    "id",
+                    "jobId",
+                    "level",
+                    "message",
+                    "timestamp"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "jobId": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "level": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "PageResponseBatchLogResponse": {
+                "required": [
+                    "hasMore",
+                    "items",
+                    "totalCount"
+                ],
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BatchLogResponse"
+                        }
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "hasMore": {
+                        "type": "boolean"
+                    }
+                }
             }
         },
         "parameters": {

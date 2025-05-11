@@ -11,7 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import DateRangePicker from "@/components/DateRangePicker";
 import VillageStatsChart from "@/components/statistics/VillageStatsChart";
 import VillageAttendanceTable from "@/components/statistics/VillageAttendanceTable";
-import { fetchVillageStatistics, fetchVillageAttendance, fetchUserVillage, getOneMonthAgo, getTodayFormatted } from "@/services/statistics-service";
+import { getOneMonthAgo, getTodayFormatted } from "@/hooks/use-statistics";
+import { useUserVillage, useVillageStatistics, useVillageAttendance } from "@/hooks/use-statistics";
 import { VillageStatistics, VillageAttendanceResponse } from "@/types/statistics";
 import { UserVillageResponse } from "@/types/user";
 import { BarChart, Users, Calendar, FileDown, Loader2 } from "lucide-react";
@@ -24,72 +25,35 @@ export default function VillagePage() {
   // 상태 관리
   const [activeTab, setActiveTab] = useState<"stats" | "attendance">("stats");
   const [villageId, setVillageId] = useState<number | null>(null);
-  const [villageInfo, setVillageInfo] = useState<UserVillageResponse | null>(null);
   const [startDate, setStartDate] = useState<string>(getOneMonthAgo());
   const [endDate, setEndDate] = useState<string>(getTodayFormatted());
   const [weekStart, setWeekStart] = useState<string>(getCurrentWeekStart());
-  const [isLoadingVillage, setIsLoadingVillage] = useState<boolean>(false);
-  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(false);
-  const [isLoadingAttendance, setIsLoadingAttendance] = useState<boolean>(false);
-  const [villageStats, setVillageStats] = useState<VillageStatistics | null>(null);
-  const [villageAttendance, setVillageAttendance] = useState<VillageAttendanceResponse | null>(null);
+  
+  // 데이터 로딩 훅 사용
+  const { data: villageInfo, isLoading: isLoadingVillage } = useUserVillage();
+  const { data: villageStats, isLoading: isLoadingStats } = useVillageStatistics(
+    villageId,
+    startDate,
+    endDate
+  );
+  const { data: villageAttendance, isLoading: isLoadingAttendance } = useVillageAttendance(
+    villageId,
+    weekStart
+  );
   
   // 마을장 권한 체크 및 마을 정보 가져오기
   useEffect(() => {
-    const loadUserVillage = async () => {
-      if (!user) return;
-      
-      if (user.role !== "VILLAGE_LEADER" && user.role !== "MINISTER" && user.role !== "ADMIN") {
-        router.push("/");
-        return;
-      }
-      
-      try {
-        setIsLoadingVillage(true);
-        const villageData = await fetchUserVillage();
-        if (villageData) {
-          setVillageInfo(villageData);
-          setVillageId(villageData.villageId);
-        }
-      } catch (error) {
-        console.error("마을 정보 로드 실패:", error);
-      } finally {
-        setIsLoadingVillage(false);
-      }
-    };
+    if (!user) return;
     
-    if (!authLoading) {
-      loadUserVillage();
+    if (user.role !== "VILLAGE_LEADER" && user.role !== "MINISTER" && user.role !== "ADMIN") {
+      router.push("/");
+      return;
     }
-  }, [authLoading, user, router]);
-  
-  // 통계 데이터 로드
-  useEffect(() => {
-    const loadVillageStats = async () => {
-      if (!villageId) return;
-      
-      setIsLoadingStats(true);
-      const data = await fetchVillageStatistics(villageId, startDate, endDate);
-      setVillageStats(data);
-      setIsLoadingStats(false);
-    };
     
-    loadVillageStats();
-  }, [villageId, startDate, endDate]);
-  
-  // 출석 현황 데이터 로드
-  useEffect(() => {
-    const loadVillageAttendance = async () => {
-      if (!villageId) return;
-      
-      setIsLoadingAttendance(true);
-      const data = await fetchVillageAttendance(villageId, weekStart);
-      setVillageAttendance(data);
-      setIsLoadingAttendance(false);
-    };
-    
-    loadVillageAttendance();
-  }, [villageId, weekStart]);
+    if (villageInfo) {
+      setVillageId(villageInfo.villageId);
+    }
+  }, [user, router, villageInfo]);
   
   // 날짜 범위 변경 핸들러
   const handleDateRangeChange = (start: string, end: string) => {
@@ -100,16 +64,6 @@ export default function VillagePage() {
   // 주차 선택 핸들러
   const handleWeekChange = (week: string) => {
     setWeekStart(week);
-  };
-  
-  // 출석 데이터 업데이트 후 리로드 핸들러
-  const handleAttendanceDataRefresh = async () => {
-    if (!villageId) return;
-    
-    setIsLoadingAttendance(true);
-    const data = await fetchVillageAttendance(villageId, weekStart);
-    setVillageAttendance(data);
-    setIsLoadingAttendance(false);
   };
   
   // 주차 옵션 생성 (지난 8주)
@@ -221,12 +175,12 @@ export default function VillagePage() {
                   />
                   <StatCard 
                     title="출석률" 
-                    value={`${villageStats?.attendanceRate.toFixed(1) || 0}%`} 
+                    value={`${villageStats?.attendanceRate?.toFixed(1) || 0}%`} 
                     icon={<BarChart className="h-5 w-5 text-amber-500" />} 
                   />
                   <StatCard 
                     title="평균 QT" 
-                    value={`${villageStats?.averageQtCount.toFixed(1) || 0}회`} 
+                    value={`${villageStats?.averageQtCount?.toFixed(1) || 0}회`} 
                     icon={<Calendar className="h-5 w-5 text-blue-500" />} 
                   />
                 </div>
@@ -248,9 +202,11 @@ export default function VillagePage() {
               </div>
             ) : (
               <div className="mb-6">
-                <VillageAttendanceTable 
-                  data={villageAttendance} 
-                />
+                {villageAttendance && (
+                  <VillageAttendanceTable 
+                    data={villageAttendance}
+                  />
+                )}
               </div>
             )}
           </TabsContent>

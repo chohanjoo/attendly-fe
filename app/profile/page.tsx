@@ -5,96 +5,46 @@ import { useAuth } from "@/hooks/use-auth";
 import { Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppShellLayout } from "@/components/layouts/app-shell-layout";
-import api from "@/lib/axios";
 import { useLeaderGbsHistory } from "@/hooks/use-attendance";
 import { useActiveDelegations } from "@/hooks/use-delegation";
 import { UserDetails, LeaderInfo, GbsInfo } from "../../types/profile";
 import { ProfileCard } from "../../components/profile/ProfileCard";
 import { ProfileDetailTabs } from "../../components/profile/ProfileDetailTabs";
 import { LeaderActivityCard } from "../../components/profile/LeaderActivityCard";
+import { useUserDetails, useLeadersList, extractActiveGbsList } from "@/hooks/use-profile";
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [availableLeaders, setAvailableLeaders] = useState<LeaderInfo[]>([]);
   const [userGbsList, setUserGbsList] = useState<GbsInfo[]>([]);
-  const [isLeadersLoading, setIsLeadersLoading] = useState(false);
+  
+  // 사용자 세부 정보 가져오기
+  const { data: userDetails, isLoading, error: userError } = useUserDetails();
   
   // 현재 위임 상태 가져오기
   const { refetch: refetchDelegations } = useActiveDelegations(userDetails?.id || null);
   
   // 리더 히스토리 데이터 가져오기
+  const isLeaderOrHigher = userDetails?.role === "LEADER" || 
+                         userDetails?.role === "VILLAGE_LEADER" || 
+                         userDetails?.role === "MINISTER" || 
+                         userDetails?.role === "ADMIN";
+  
   const { data: leaderHistory } = useLeaderGbsHistory(
-    userDetails?.id && (userDetails.role === "LEADER" || userDetails.role === "VILLAGE_LEADER" || userDetails.role === "MINISTER" || userDetails.role === "ADMIN") 
-      ? userDetails.id 
-      : null
+    userDetails?.id && isLeaderOrHigher ? userDetails.id : null
   );
 
-  // 사용자 세부 정보 가져오기
+  // 리더 목록 가져오기
+  const { data: availableLeaders = [], isLoading: isLeadersLoading } = useLeadersList(
+    userDetails?.id,
+    !!userDetails && isLeaderOrHigher
+  );
+
+  // GBS 목록 설정
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (!user) return;
-      
-      try {
-        setIsLoading(true);
-        const response = await api.get("/auth/me");
-        setUserDetails(response.data);
-      } catch (err) {
-        console.error("사용자 정보를 가져오는 중 오류가 발생했습니다:", err);
-        setError("사용자 정보를 가져오는 중 오류가 발생했습니다.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserDetails();
-  }, [user]);
-
-  // 리더 목록 및 GBS 목록 가져오기
-  useEffect(() => {
-    const fetchLeadersAndGbs = async () => {
-      if (!userDetails) return;
-      if (!(userDetails.role === "LEADER" || userDetails.role === "VILLAGE_LEADER" || userDetails.role === "MINISTER" || userDetails.role === "ADMIN")) return;
-
-      try {
-        setIsLeadersLoading(true);
-        
-        // 리더 목록 가져오기
-        const leadersResponse = await api.post("/api/users/by-roles", {
-          roles: ["LEADER"]
-        });
-        
-        const leaders = leadersResponse.data.users
-          .filter((leader: any) => leader.id !== userDetails.id)
-          .map((leader: any) => ({
-            id: leader.id,
-            name: leader.name
-          }));
-        
-        setAvailableLeaders(leaders);
-        
-        // 리더의 GBS 목록 가져오기
-        if (leaderHistory && leaderHistory.histories) {
-          const activeGbsList = leaderHistory.histories
-            .filter(history => history.isActive)
-            .map(history => ({
-              id: history.gbsId,
-              name: history.gbsName
-            }));
-          
-          setUserGbsList(activeGbsList);
-        }
-      } catch (err) {
-        console.error("리더 및 GBS 정보를 가져오는 중 오류가 발생했습니다:", err);
-      } finally {
-        setIsLeadersLoading(false);
-      }
-    };
-
-    fetchLeadersAndGbs();
-  }, [userDetails, leaderHistory]);
+    if (leaderHistory) {
+      setUserGbsList(extractActiveGbsList(leaderHistory));
+    }
+  }, [leaderHistory]);
 
   if (isLoading) {
     return (
@@ -106,13 +56,13 @@ export default function ProfilePage() {
     );
   }
 
-  if (error || !userDetails) {
+  if (userError || !userDetails) {
     return (
       <AppShellLayout>
         <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)]">
           <Info className="h-12 w-12 text-red-500 mb-4" />
           <h2 className="text-xl font-semibold mb-2">정보를 불러올 수 없습니다</h2>
-          <p className="text-gray-600">{error || "사용자 정보를 찾을 수 없습니다."}</p>
+          <p className="text-gray-600">{userError instanceof Error ? userError.message : "사용자 정보를 찾을 수 없습니다."}</p>
           <Button onClick={() => window.location.reload()} className="mt-4">
             다시 시도
           </Button>
@@ -138,7 +88,7 @@ export default function ProfilePage() {
         </div>
 
         {/* 리더 정보 카드 (리더인 경우만 표시) */}
-        {(userDetails.role === "LEADER" || userDetails.role === "VILLAGE_LEADER" || userDetails.role === "MINISTER" || userDetails.role === "ADMIN") && (
+        {isLeaderOrHigher && (
           <LeaderActivityCard 
             userId={userDetails.id}
             availableLeaders={availableLeaders}

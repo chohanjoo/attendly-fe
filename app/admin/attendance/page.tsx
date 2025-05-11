@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -44,8 +43,8 @@ import { CalendarIcon, Download, Edit, Filter, Search } from "lucide-react"
 import { format } from "date-fns"
 import { ko } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-import axios from "axios"
 import Link from "next/link"
+import { useAdminAttendance } from "@/hooks/use-admin-attendance"
 
 type DateRange = {
   from: Date | undefined
@@ -62,20 +61,6 @@ type AttendanceRecord = {
   note?: string
 }
 
-const fetchAttendance = async (
-  page: number, 
-  limit: number, 
-  search: string,
-  startDate?: string,
-  endDate?: string,
-  status?: string
-) => {
-  const response = await axios.get("/api/admin/attendance", {
-    params: { page, limit, search, startDate, endDate, status },
-  })
-  return response.data
-}
-
 export default function AttendancePage() {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
@@ -88,26 +73,14 @@ export default function AttendancePage() {
   })
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined)
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: [
-      "admin", 
-      "attendance", 
-      page, 
-      limit, 
-      debouncedSearch, 
-      dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
-      dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
-      statusFilter
-    ],
-    queryFn: () => fetchAttendance(
-      page, 
-      limit, 
-      debouncedSearch,
-      dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
-      dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
-      statusFilter
-    ),
-  })
+  const { data, isLoading, isError } = useAdminAttendance(
+    page, 
+    limit, 
+    debouncedSearch, 
+    dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+    dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
+    statusFilter
+  );
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -310,7 +283,10 @@ export default function AttendancePage() {
                   defaultMonth={new Date()}
                   selected={dateRange}
                   onSelect={(range) => {
-                    if (range) setDateRange(range)
+                    if (range) setDateRange({
+                      from: range.from,
+                      to: range.to
+                    });
                   }}
                   numberOfMonths={2}
                   locale={ko}

@@ -78,7 +78,7 @@ export default function UsersPage() {
       )
     }
 
-    if (data?.users?.length === 0) {
+    if (data?.items?.length === 0) {
       return (
         <TableRow>
           <TableCell colSpan={6} className="text-center py-10">
@@ -88,7 +88,7 @@ export default function UsersPage() {
       )
     }
 
-    return data?.users?.map((user: User) => (
+    return data?.items?.map((user: User) => (
       <TableRow key={user.id}>
         <TableCell>{user.id}</TableCell>
         <TableCell>

@@ -151,7 +151,12 @@ const logError = (error: any) => {
 // 토큰 리프레시 처리 함수
 const refreshAuthToken = async (refreshToken: string) => {
   const response = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
-  return response.data;
+  // API 응답 형식 변경 반영 - data 필드에서 토큰 값을 꺼내옴
+  if (response.data.success) {
+    return response.data.data;
+  } else {
+    throw new Error(response.data.message || '토큰 갱신에 실패했습니다.');
+  }
 };
 
 // 새 토큰 저장 및 알림 함수

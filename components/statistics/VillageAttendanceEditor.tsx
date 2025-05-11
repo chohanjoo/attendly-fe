@@ -27,7 +27,7 @@ import {
 import { Save, X, Edit } from "lucide-react";
 import { AttendanceItemRequest } from "@/types/attendance";
 import { GbsAttendanceSummary } from "@/types/statistics";
-import { updateGbsAttendanceByVillageLeader } from "@/services/statistics-service";
+import { useUpdateGbsAttendanceByVillageLeader } from "@/hooks/use-statistics";
 
 interface VillageAttendanceEditorProps {
   villageId: number;
@@ -44,9 +44,11 @@ export default function VillageAttendanceEditor({
 }: VillageAttendanceEditorProps) {
   const [open, setOpen] = useState(false);
   const [attendanceInputs, setAttendanceInputs] = useState<AttendanceItemRequest[]>([]);
-  const [isPending, setIsPending] = useState(false);
   
   const queryClient = useQueryClient();
+  
+  // API mutate 훅 사용
+  const { mutate: updateAttendance, isPending } = useUpdateGbsAttendanceByVillageLeader();
   
   // 출석 수정 모달 열기
   const handleOpenEditor = () => {
@@ -81,27 +83,26 @@ export default function VillageAttendanceEditor({
     if (attendanceInputs.length === 0) return;
     
     try {
-      setIsPending(true);
-      
-      await updateGbsAttendanceByVillageLeader(
-        villageId, 
-        gbsAttendance.gbsId, 
-        weekStart, 
-        attendanceInputs
+      // 훅의 mutate 함수 사용
+      updateAttendance(
+        {
+          villageId, 
+          gbsId: gbsAttendance.gbsId, 
+          weekStart, 
+          attendances: attendanceInputs
+        },
+        {
+          onSuccess: () => {
+            // 모달 닫기
+            setOpen(false);
+            
+            // 성공 콜백 실행
+            if (onSuccess) onSuccess();
+          }
+        }
       );
-      
-      // 캐시 무효화 처리
-      queryClient.invalidateQueries({ queryKey: ['villageAttendance', villageId, weekStart] });
-      
-      // 모달 닫기
-      setOpen(false);
-      
-      // 성공 콜백 실행
-      if (onSuccess) onSuccess();
     } catch (error) {
       console.error("출석 데이터 저장 실패:", error);
-    } finally {
-      setIsPending(false);
     }
   };
   

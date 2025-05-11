@@ -1,7 +1,7 @@
-import api from "@/lib/axios";
 import { toast } from "sonner";
 import { AttendanceResponse, MonthlyAttendance } from "@/types/attendance";
 import { getCurrentMonthWeeks } from "@/lib/attendance-utils";
+import { fetchAttendanceByWeek } from "@/hooks/use-attendance-api";
 
 // 이번달 출석 데이터 조회 함수
 export const fetchMonthlyAttendance = async (gbsId: number | null): Promise<MonthlyAttendance[]> => {
@@ -14,10 +14,8 @@ export const fetchMonthlyAttendance = async (gbsId: number | null): Promise<Mont
     // 각 주차별 출석 데이터 조회
     for (const week of weekStarts) {
       try {
-        const response = await api.get('/api/attendance', {
-          params: { gbsId, weekStart: week }
-        });
-        allAttendances.push(response.data);
+        const attendances = await fetchAttendanceByWeek(gbsId, week);
+        allAttendances.push(attendances);
       } catch (error) {
         // 데이터가 없는 주차는 빈 배열로 처리
         allAttendances.push([]);

@@ -11,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getOneMonthAgo, getTodayFormatted } from "@/services/statistics-service";
+import { getOneMonthAgo } from "@/hooks/use-statistics";
 
 interface DateRangePickerProps {
   onDateRangeChange: (startDate: string, endDate: string) => void;

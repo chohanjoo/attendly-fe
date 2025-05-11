@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { saveTokens, saveTokensAndRole, isClientSide } from "@/lib/auth";
 import { toast } from "sonner";
+import { ApiResponse } from "@/types/api";
 
 // 사용자 타입 정의
 export interface User {
@@ -113,9 +114,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // 사용자 정보 조회 API 호출
           try {
             console.log("사용자 정보 조회 시도");
-            const response = await api.get("/auth/me");
+            const response = await api.get<ApiResponse<User>>("/auth/me");
             console.log("사용자 정보 조회 성공:", response.data);
-            setUser(response.data);
+            
+            // API 응답 형식 변경 반영
+            const { success, data } = response.data;
+            
+            if (success) {
+              setUser(data);
+            } else {
+              // 인증 실패 - 토큰 제거
+              clearAuthTokens();
+            }
           } catch (apiError) {
             console.error("사용자 정보 조회 실패:", apiError);
             // 토큰이 유효하지 않은 경우 토큰 제거
@@ -144,8 +154,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     try {
       console.log("로그인 시도:", email);
-      const response = await api.post("/auth/login", { email, password });
-      const { accessToken, refreshToken, userId, name, role } = response.data;
+      const response = await api.post<ApiResponse<{
+        userId: number;
+        name: string;
+        role: string;
+        accessToken: string;
+        refreshToken: string;
+      }>>("/auth/login", { email, password });
+      
+      // API 응답 형식 변경 반영
+      const { success, data, message } = response.data;
+      
+      if (!success) {
+        throw new Error(message || "로그인에 실패했습니다.");
+      }
+      
+      const { accessToken, refreshToken, userId, name, role } = data;
       
       console.log("로그인 성공:", { userId, name, role });
       
@@ -169,7 +193,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return userData;
     } catch (err: any) {
       console.error("로그인 오류:", err);
-      const errorMessage = err.response?.data?.message || "로그인 중 오류가 발생했습니다.";
+      const errorMessage = err.response?.data?.message || err.message || "로그인 중 오류가 발생했습니다.";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

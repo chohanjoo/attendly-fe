@@ -5,6 +5,7 @@ import {
   LeaderDelegationResponse, 
   DelegationCreateRequest 
 } from "@/types/delegation";
+import { ApiResponse, ApiPageResponse } from "@/types/api";
 
 // 활성화된 위임 조회 훅
 export const useActiveDelegations = (userId: number | null, date?: string) => {
@@ -21,8 +22,8 @@ export const useActiveDelegations = (userId: number | null, date?: string) => {
         params.append('date', date);
       }
       
-      const response = await api.get(`/api/delegations/active?${params.toString()}`);
-      return response.data as LeaderDelegationResponse[];
+      const response = await api.get<ApiPageResponse<LeaderDelegationResponse>>(`/api/delegations/active?${params.toString()}`);
+      return response.data.data.items;
     },
     enabled: !!userId
   });
@@ -43,11 +44,11 @@ export const useDelegatedGbs = (userId: number | null, date?: string) => {
         params.append('date', date);
       }
       
-      const response = await api.get(`/api/delegations/active?${params.toString()}`);
+      const response = await api.get<ApiPageResponse<LeaderDelegationResponse>>(`/api/delegations/active?${params.toString()}`);
       // 리더가 위임받은 GBS만 필터링 (delegateeId가 현재 사용자인 것만)
-      return response.data.filter((delegation: LeaderDelegationResponse) => 
+      return response.data.data.items.filter((delegation: LeaderDelegationResponse) => 
         delegation.delegateeId === userId
-      ) as LeaderDelegationResponse[];
+      );
     },
     enabled: !!userId
   });
@@ -59,8 +60,8 @@ export const useCreateDelegation = () => {
   
   return useMutation({
     mutationFn: async (data: DelegationCreateRequest) => {
-      const response = await api.post('/api/delegations', data);
-      return response.data as LeaderDelegationResponse;
+      const response = await api.post<ApiResponse<LeaderDelegationResponse>>('/api/delegations', data);
+      return response.data.data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['activeDelegations', variables.delegatorId] });
