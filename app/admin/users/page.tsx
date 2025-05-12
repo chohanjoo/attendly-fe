@@ -150,7 +150,7 @@ export default function UsersPage() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/admin/users/new">
+          <Link href="/admin/users/create">
             <UserPlus className="h-4 w-4 mr-2" />
             <span>사용자 추가</span>
           </Link>

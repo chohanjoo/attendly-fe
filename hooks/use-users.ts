@@ -93,4 +93,34 @@ export const useDeleteUser = (id: string, onSuccess?: () => void) => {
       toast.error(error.response?.data?.message || "사용자 삭제에 실패했습니다.");
     },
   });
+};
+
+export type UserCreateValues = {
+  name: string;
+  email: string;
+  password: string;
+  phoneNumber?: string;
+  role: string;
+  status: "ACTIVE" | "INACTIVE" | "PENDING";
+  birthDate?: string;
+  departmentId: number;
+};
+
+export const useCreateUser = (onSuccess?: () => void) => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (values: UserCreateValues) => {
+      return api.post("/api/admin/users", values);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      toast.success("사용자가 생성되었습니다.");
+      if (onSuccess) onSuccess();
+    },
+    onError: (error: any) => {
+      console.error("사용자 생성 중 오류 발생:", error);
+      toast.error(error.response?.data?.message || "사용자 생성에 실패했습니다.");
+    },
+  });
 }; 
