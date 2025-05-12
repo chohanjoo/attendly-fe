@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Plus, PencilIcon, Trash2, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -42,86 +42,44 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { useDepartments } from "@/hooks/use-departments"
+import { useUsers, UserResponse } from "@/hooks/use-users"
+import { 
+  useVillages, 
+  useCreateVillage, 
+  useUpdateVillage, 
+  useAssignVillageLeader, 
+  useTerminateVillageLeader,
+  Village
+} from "@/hooks/use-villages"
 
-// 마을 타입 정의
-interface Village {
-  id: number
-  name: string
-  departmentId: number
-  departmentName: string
-  villageLeaderId?: number
-  villageLeaderName?: string
-  createdAt: string
-  updatedAt: string
+// API 응답 타입 정의
+interface ApiResponse<T> {
+  success: boolean
+  timestamp: string
+  data: T
+  message: string
+  code: number
 }
 
-// 부서 타입 정의
-interface Department {
-  id: number
-  name: string
+interface PageResponse<T> {
+  items: T[]
+  totalCount: number
+  hasMore: boolean
 }
 
-// 사용자 타입 정의
-interface User {
-  id: number
-  name: string
-  role: string
+const API_BASE_URL = "/api"
+
+// API 요청 헤더 설정
+const API_HEADERS = {
+  'Content-Type': 'application/json',
+  'X-Request-ID': crypto.randomUUID(),
 }
-
-// 모킹 데이터 - 마을
-const mockVillages: Village[] = [
-  {
-    id: 1,
-    name: "동문마을",
-    departmentId: 1,
-    departmentName: "청년부",
-    villageLeaderId: 101,
-    villageLeaderName: "김철수",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-  },
-  {
-    id: 2,
-    name: "서문마을",
-    departmentId: 1,
-    departmentName: "청년부",
-    villageLeaderId: 102,
-    villageLeaderName: "이영희",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-  },
-  {
-    id: 3,
-    name: "남문마을",
-    departmentId: 2,
-    departmentName: "장년부",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-  },
-]
-
-// 모킹 데이터 - 부서
-const mockDepartments: Department[] = [
-  { id: 1, name: "청년부" },
-  { id: 2, name: "장년부" },
-  { id: 3, name: "학생부" },
-]
-
-// 모킹 데이터 - 사용자
-const mockUsers: User[] = [
-  { id: 101, name: "김철수", role: "MEMBER" },
-  { id: 102, name: "이영희", role: "MEMBER" },
-  { id: 103, name: "박지성", role: "MEMBER" },
-  { id: 104, name: "최민수", role: "MEMBER" },
-]
 
 export function VillageManagement() {
   const { toast } = useToast()
-  const [villages, setVillages] = useState<Village[]>([])
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [users, setUsers] = useState<User[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [departmentFilter, setDepartmentFilter] = useState<number>()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isLeaderDialogOpen, setIsLeaderDialogOpen] = useState(false)
@@ -132,33 +90,69 @@ export function VillageManagement() {
   const [newVillageLeaderId, setNewVillageLeaderId] = useState<string>("")
 
   // 마을 수정 폼 상태
-  const [editVillage, setEditVillage] = useState<Village | null>(null)
+  const [editVillageId, setEditVillageId] = useState<number | null>(null)
   const [editVillageName, setEditVillageName] = useState("")
   const [editVillageDepartmentId, setEditVillageDepartmentId] = useState<string>("")
 
   // 마을장 지정 폼 상태
-  const [leaderVillage, setLeaderVillage] = useState<Village | null>(null)
+  const [leaderVillageId, setLeaderVillageId] = useState<number | null>(null)
+  const [leaderVillageName, setLeaderVillageName] = useState<string>("")
   const [newLeaderId, setNewLeaderId] = useState<string>("")
 
-  useEffect(() => {
-    // API 호출을 모킹 - 실제 구현 시 API 호출로 대체
-    setTimeout(() => {
-      setVillages(mockVillages)
-      setDepartments(mockDepartments)
-      setUsers(mockUsers)
-      setIsLoading(false)
-    }, 500)
-  }, [])
+  // 데이터 가져오기
+  const { data: villagesData, isLoading: isVillagesLoading } = useVillages(departmentFilter)
+  const { data: departmentsData } = useDepartments()
+  const { data: usersData } = useUsers(0, 100, "")
 
   // 마을 목록 필터링
-  const filteredVillages = villages.filter((village) =>
+  const filteredVillages = villagesData?.items.filter((village) =>
     village.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     village.departmentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (village.villageLeaderName && village.villageLeaderName.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
+  ) || []
+
+  // API 훅
+  const createVillageMutation = useCreateVillage(() => {
+    setIsAddDialogOpen(false)
+    resetAddForm()
+  })
+  
+  const updateVillageMutation = useUpdateVillage(editVillageId || 0, () => {
+    setIsEditDialogOpen(false)
+    resetEditForm()
+  })
+  
+  const assignVillageLeaderMutation = useAssignVillageLeader(() => {
+    setIsLeaderDialogOpen(false)
+    resetLeaderForm()
+  })
+  
+  const terminateVillageLeaderMutation = useTerminateVillageLeader(() => {
+    setIsLeaderDialogOpen(false)
+    resetLeaderForm()
+  })
+
+  // 폼 초기화 함수
+  const resetAddForm = () => {
+    setNewVillageName("")
+    setNewVillageDepartmentId("")
+    setNewVillageLeaderId("")
+  }
+
+  const resetEditForm = () => {
+    setEditVillageId(null)
+    setEditVillageName("")
+    setEditVillageDepartmentId("")
+  }
+
+  const resetLeaderForm = () => {
+    setLeaderVillageId(null)
+    setLeaderVillageName("")
+    setNewLeaderId("")
+  }
 
   // 마을 추가
-  const handleAddVillage = () => {
+  const handleAddVillage = async () => {
     if (!newVillageName.trim()) {
       toast({
         title: "오류",
@@ -178,53 +172,26 @@ export function VillageManagement() {
     }
 
     const departmentId = parseInt(newVillageDepartmentId)
-    const departmentName = departments.find(d => d.id === departmentId)?.name || ""
+    const villageLeaderId = newVillageLeaderId && newVillageLeaderId !== "unassigned" ? parseInt(newVillageLeaderId) : undefined
     
-    let villageLeaderId: number | undefined = undefined
-    let villageLeaderName: string | undefined = undefined
-    
-    if (newVillageLeaderId) {
-      villageLeaderId = parseInt(newVillageLeaderId)
-      villageLeaderName = users.find(u => u.id === villageLeaderId)?.name
-    }
-
-    // 실제 구현 시 API 호출로 대체
-    const newVillage: Village = {
-      id: villages.length > 0 ? Math.max(...villages.map(v => v.id)) + 1 : 1,
+    createVillageMutation.mutate({
       name: newVillageName,
       departmentId,
-      departmentName,
-      villageLeaderId,
-      villageLeaderName,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
-    setVillages([...villages, newVillage])
-    
-    // 폼 초기화
-    setNewVillageName("")
-    setNewVillageDepartmentId("")
-    setNewVillageLeaderId("")
-    setIsAddDialogOpen(false)
-    
-    toast({
-      title: "마을 추가 완료",
-      description: `${newVillageName} 마을이 추가되었습니다.`,
+      villageLeaderId
     })
   }
 
   // 마을 수정 다이얼로그 열기
   const openEditDialog = (village: Village) => {
-    setEditVillage(village)
+    setEditVillageId(village.id)
     setEditVillageName(village.name)
     setEditVillageDepartmentId(village.departmentId.toString())
     setIsEditDialogOpen(true)
   }
 
   // 마을 수정
-  const handleEditVillage = () => {
-    if (!editVillage) return
+  const handleEditVillage = async () => {
+    if (!editVillageId) return
     
     if (!editVillageName.trim()) {
       toast({
@@ -245,98 +212,48 @@ export function VillageManagement() {
     }
 
     const departmentId = parseInt(editVillageDepartmentId)
-    const departmentName = departments.find(d => d.id === departmentId)?.name || ""
-
-    // 실제 구현 시 API 호출로 대체
-    const updatedVillages = villages.map(village => 
-      village.id === editVillage.id 
-        ? { 
-            ...village, 
-            name: editVillageName, 
-            departmentId, 
-            departmentName,
-            updatedAt: new Date().toISOString() 
-          } 
-        : village
-    )
-
-    setVillages(updatedVillages)
-    setIsEditDialogOpen(false)
     
-    toast({
-      title: "마을 수정 완료",
-      description: `마을 정보가 수정되었습니다.`,
+    updateVillageMutation.mutate({
+      name: editVillageName,
+      departmentId
     })
   }
 
   // 마을 삭제
   const handleDeleteVillage = (id: number) => {
-    // 실제 구현 시 API 호출로 대체
-    const updatedVillages = villages.filter(village => village.id !== id)
-    setVillages(updatedVillages)
-    
+    // 마을 삭제 API는 admin-api-docs.json에 정의되어 있지 않음
     toast({
-      title: "마을 삭제 완료",
-      description: "마을이 삭제되었습니다.",
+      title: "기능 지원 예정",
+      description: "현재 마을 삭제 기능은 지원되지 않습니다.",
+      variant: "destructive",
     })
   }
 
   // 마을장 지정 다이얼로그 열기
   const openLeaderDialog = (village: Village) => {
-    setLeaderVillage(village)
+    setLeaderVillageId(village.id)
+    setLeaderVillageName(village.name)
     setNewLeaderId(village.villageLeaderId?.toString() || "")
     setIsLeaderDialogOpen(true)
   }
 
   // 마을장 지정
-  const handleAssignLeader = () => {
-    if (!leaderVillage) return
+  const handleAssignLeader = async () => {
+    if (!leaderVillageId) return
     
-    if (!newLeaderId) {
+    if (!newLeaderId || newLeaderId === "unassigned") {
       // 마을장 해제
-      const updatedVillages = villages.map(village => 
-        village.id === leaderVillage.id 
-          ? { 
-              ...village, 
-              villageLeaderId: undefined, 
-              villageLeaderName: undefined,
-              updatedAt: new Date().toISOString() 
-            } 
-          : village
-      )
-
-      setVillages(updatedVillages)
-      setIsLeaderDialogOpen(false)
+      terminateVillageLeaderMutation.mutate(leaderVillageId)
+    } else {
+      // 마을장 지정
+      const userId = parseInt(newLeaderId)
       
-      toast({
-        title: "마을장 해제 완료",
-        description: `마을장이 해제되었습니다.`,
+      assignVillageLeaderMutation.mutate({
+        userId,
+        villageId: leaderVillageId,
+        startDate: new Date().toISOString().split('T')[0] // 오늘 날짜
       })
-      return
     }
-
-    const userId = parseInt(newLeaderId)
-    const userName = users.find(u => u.id === userId)?.name || ""
-
-    // 실제 구현 시 API 호출로 대체
-    const updatedVillages = villages.map(village => 
-      village.id === leaderVillage.id 
-        ? { 
-            ...village, 
-            villageLeaderId: userId, 
-            villageLeaderName: userName,
-            updatedAt: new Date().toISOString() 
-          } 
-        : village
-    )
-
-    setVillages(updatedVillages)
-    setIsLeaderDialogOpen(false)
-    
-    toast({
-      title: "마을장 지정 완료",
-      description: `${userName}님이 ${leaderVillage.name}의 마을장으로 지정되었습니다.`,
-    })
   }
 
   return (
@@ -393,7 +310,7 @@ export function VillageManagement() {
                       <SelectValue placeholder="부서 선택" />
                     </SelectTrigger>
                     <SelectContent>
-                      {departments.map(department => (
+                      {departmentsData?.items.map(department => (
                         <SelectItem key={department.id} value={department.id.toString()}>
                           {department.name}
                         </SelectItem>
@@ -413,8 +330,8 @@ export function VillageManagement() {
                       <SelectValue placeholder="마을장 선택 (선택사항)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">미지정</SelectItem>
-                      {users.map(user => (
+                      <SelectItem value="unassigned">미지정</SelectItem>
+                      {usersData?.items.map((user: UserResponse) => (
                         <SelectItem key={user.id} value={user.id.toString()}>
                           {user.name}
                         </SelectItem>
@@ -424,13 +341,19 @@ export function VillageManagement() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" onClick={handleAddVillage}>추가</Button>
+                <Button 
+                  type="submit" 
+                  onClick={handleAddVillage}
+                  disabled={createVillageMutation.isPending}
+                >
+                  {createVillageMutation.isPending ? "처리 중..." : "추가"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
 
-        {isLoading ? (
+        {isVillagesLoading ? (
           <div className="flex justify-center py-10">로딩 중...</div>
         ) : filteredVillages.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground">
@@ -549,7 +472,7 @@ export function VillageManagement() {
                     <SelectValue placeholder="부서 선택" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departments.map(department => (
+                    {departmentsData?.items.map(department => (
                       <SelectItem key={department.id} value={department.id.toString()}>
                         {department.name}
                       </SelectItem>
@@ -559,7 +482,13 @@ export function VillageManagement() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" onClick={handleEditVillage}>저장</Button>
+              <Button 
+                type="submit" 
+                onClick={handleEditVillage}
+                disabled={updateVillageMutation.isPending}
+              >
+                {updateVillageMutation.isPending ? "처리 중..." : "저장"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -570,7 +499,7 @@ export function VillageManagement() {
             <DialogHeader>
               <DialogTitle>마을장 지정</DialogTitle>
               <DialogDescription>
-                {leaderVillage?.name} 마을의 마을장을 지정합니다.
+                {leaderVillageName} 마을의 마을장을 지정합니다.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -586,8 +515,8 @@ export function VillageManagement() {
                     <SelectValue placeholder="마을장 선택" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">마을장 해제</SelectItem>
-                    {users.map(user => (
+                    <SelectItem value="unassigned">마을장 해제</SelectItem>
+                    {usersData?.items.map((user: UserResponse) => (
                       <SelectItem key={user.id} value={user.id.toString()}>
                         {user.name}
                       </SelectItem>
@@ -597,7 +526,15 @@ export function VillageManagement() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit" onClick={handleAssignLeader}>저장</Button>
+              <Button 
+                type="submit" 
+                onClick={handleAssignLeader}
+                disabled={assignVillageLeaderMutation.isPending || terminateVillageLeaderMutation.isPending}
+              >
+                {(assignVillageLeaderMutation.isPending || terminateVillageLeaderMutation.isPending) 
+                  ? "처리 중..." 
+                  : "저장"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
