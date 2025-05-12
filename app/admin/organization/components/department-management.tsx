@@ -34,55 +34,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { useToast } from "@/components/ui/use-toast"
-
-// 부서 타입 정의
-interface Department {
-  id: number
-  name: string
-  createdAt: string
-  updatedAt: string
-}
-
-// 모킹 데이터
-const mockDepartments: Department[] = [
-  {
-    id: 1,
-    name: "청년부",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-  },
-  {
-    id: 2,
-    name: "장년부",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-  },
-  {
-    id: 3,
-    name: "학생부",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-  },
-]
+import { useDepartment, Department } from "@/hooks/use-department"
 
 export function DepartmentManagement() {
-  const { toast } = useToast()
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const {
+    departments,
+    isLoading,
+    fetchDepartments,
+    addDepartment,
+    editDepartment,
+    deleteDepartment
+  } = useDepartment()
+  
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [newDepartmentName, setNewDepartmentName] = useState("")
-  const [editDepartment, setEditDepartment] = useState<Department | null>(null)
+  const [editDepartmentInfo, setEditDepartmentInfo] = useState<Department | null>(null)
   const [editDepartmentName, setEditDepartmentName] = useState("")
 
   useEffect(() => {
-    // API 호출을 모킹 - 실제 구현 시 API 호출로 대체
-    setTimeout(() => {
-      setDepartments(mockDepartments)
-      setIsLoading(false)
-    }, 500)
+    fetchDepartments()
   }, [])
 
   // 부서 목록 필터링
@@ -91,79 +63,29 @@ export function DepartmentManagement() {
   )
 
   // 부서 추가
-  const handleAddDepartment = () => {
-    if (!newDepartmentName.trim()) {
-      toast({
-        title: "오류",
-        description: "부서 이름을 입력해주세요.",
-        variant: "destructive",
-      })
-      return
+  const handleAddDepartment = async () => {
+    const success = await addDepartment(newDepartmentName)
+    if (success) {
+      setNewDepartmentName("")
+      setIsAddDialogOpen(false)
     }
-
-    // 실제 구현 시 API 호출로 대체
-    const newDepartment: Department = {
-      id: departments.length > 0 ? Math.max(...departments.map(d => d.id)) + 1 : 1,
-      name: newDepartmentName,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
-    setDepartments([...departments, newDepartment])
-    setNewDepartmentName("")
-    setIsAddDialogOpen(false)
-    
-    toast({
-      title: "부서 추가 완료",
-      description: `${newDepartmentName} 부서가 추가되었습니다.`,
-    })
   }
 
   // 부서 수정 다이얼로그 열기
   const openEditDialog = (department: Department) => {
-    setEditDepartment(department)
+    setEditDepartmentInfo(department)
     setEditDepartmentName(department.name)
     setIsEditDialogOpen(true)
   }
 
   // 부서 수정
-  const handleEditDepartment = () => {
-    if (!editDepartment) return
-    if (!editDepartmentName.trim()) {
-      toast({
-        title: "오류",
-        description: "부서 이름을 입력해주세요.",
-        variant: "destructive",
-      })
-      return
+  const handleEditDepartment = async () => {
+    if (!editDepartmentInfo) return
+    
+    const success = await editDepartment(editDepartmentInfo.id, editDepartmentName)
+    if (success) {
+      setIsEditDialogOpen(false)
     }
-
-    // 실제 구현 시 API 호출로 대체
-    const updatedDepartments = departments.map(department => 
-      department.id === editDepartment.id 
-        ? { ...department, name: editDepartmentName, updatedAt: new Date().toISOString() } 
-        : department
-    )
-
-    setDepartments(updatedDepartments)
-    setIsEditDialogOpen(false)
-    
-    toast({
-      title: "부서 수정 완료",
-      description: `부서 이름이 ${editDepartmentName}(으)로 수정되었습니다.`,
-    })
-  }
-
-  // 부서 삭제
-  const handleDeleteDepartment = (id: number) => {
-    // 실제 구현 시 API 호출로 대체
-    const updatedDepartments = departments.filter(department => department.id !== id)
-    setDepartments(updatedDepartments)
-    
-    toast({
-      title: "부서 삭제 완료",
-      description: "부서가 삭제되었습니다.",
-    })
   }
 
   return (
@@ -269,7 +191,7 @@ export function DepartmentManagement() {
                           <AlertDialogFooter>
                             <AlertDialogCancel>취소</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDeleteDepartment(department.id)}
+                              onClick={() => deleteDepartment(department.id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                               삭제
