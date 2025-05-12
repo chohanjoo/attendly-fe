@@ -62,7 +62,7 @@ export default function UserDetailPage() {
       name: "",
       email: "",
       role: "",
-      status: "active",
+      status: "ACTIVE",
     },
   })
 
@@ -202,9 +202,10 @@ export default function UserDetailPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="admin">관리자</SelectItem>
-                            <SelectItem value="manager">매니저</SelectItem>
-                            <SelectItem value="user">일반 사용자</SelectItem>
+                            <SelectItem value="ADMIN">관리자</SelectItem>
+                            <SelectItem value="VILLAGE_LEADER">마을장</SelectItem>
+                            <SelectItem value="LEADER">리더</SelectItem>
+                            <SelectItem value="MEMBER">조원</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormDescription>
@@ -232,9 +233,9 @@ export default function UserDetailPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="active">활성</SelectItem>
-                            <SelectItem value="inactive">비활성</SelectItem>
-                            <SelectItem value="pending">대기</SelectItem>
+                            <SelectItem value="ACTIVE">활성</SelectItem>
+                            <SelectItem value="INACTIVE">비활성</SelectItem>
+                            <SelectItem value="PENDING">대기</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormDescription>

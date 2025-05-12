@@ -35,6 +35,7 @@ export default function UsersPage() {
   const [size, setSize] = useState(10)
   const [name, setName] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState("ALL")
 
   const { data, isLoading, isError } = useUsers(page, size, debouncedSearch)
 
@@ -46,15 +47,28 @@ export default function UsersPage() {
 
   const renderStatus = (status: User["status"]) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">활성</span>
-      case "inactive":
+      case "INACTIVE":
         return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">비활성</span>
-      case "pending":
+      case "PENDING":
         return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">대기</span>
       default:
         return null
     }
+  }
+
+  const filteredUsers = () => {
+    if (!data?.items) return []
+    
+    if (statusFilter === "ALL") return data.items
+    
+    return data.items.filter((user: User) => {
+      if (statusFilter === "ACTIVE" && user.status === "ACTIVE") return true
+      if (statusFilter === "INACTIVE" && user.status === "INACTIVE") return true
+      if (statusFilter === "PENDING" && user.status === "PENDING") return true
+      return false
+    })
   }
 
   const renderUserTable = () => {
@@ -78,17 +92,19 @@ export default function UsersPage() {
       )
     }
 
-    if (data?.items?.length === 0) {
+    const users = filteredUsers()
+    
+    if (users.length === 0) {
       return (
         <TableRow>
           <TableCell colSpan={6} className="text-center py-10">
-            사용자 데이터가 없습니다.
+            {data?.items?.length === 0 ? "사용자 데이터가 없습니다." : "필터 조건에 맞는 사용자가 없습니다."}
           </TableCell>
         </TableRow>
       )
     }
 
-    return data?.items?.map((user: User) => (
+    return users.map((user: User) => (
       <TableRow key={user.id}>
         <TableCell>{user.id}</TableCell>
         <TableCell>
@@ -100,7 +116,14 @@ export default function UsersPage() {
           </Link>
         </TableCell>
         <TableCell>{user.email}</TableCell>
-        <TableCell>{user.role}</TableCell>
+        <TableCell>
+          {user.role === "ADMIN" ? "관리자" :
+           user.role === "MINISTER" ? "목회자" :
+           user.role === "VILLAGE_LEADER" ? "마을장" :
+           user.role === "LEADER" ? "리더" :
+           user.role === "MEMBER" ? "조원" : 
+           user.role}
+        </TableCell>
         <TableCell>{renderStatus(user.status)}</TableCell>
         <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
       </TableRow>
@@ -143,19 +166,20 @@ export default function UsersPage() {
           <Filter className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground hidden sm:inline">필터:</span>
           <Select
-            defaultValue="all"
+            value={statusFilter}
             onValueChange={(value) => {
-              // 필터 구현
+              setStatusFilter(value)
+              setPage(0)
             }}
           >
             <SelectTrigger className="h-9 w-[180px]">
               <SelectValue placeholder="모든 상태" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">모든 상태</SelectItem>
-              <SelectItem value="active">활성</SelectItem>
-              <SelectItem value="inactive">비활성</SelectItem>
-              <SelectItem value="pending">대기</SelectItem>
+              <SelectItem value="ALL">모든 상태</SelectItem>
+              <SelectItem value="ACTIVE">활성</SelectItem>
+              <SelectItem value="INACTIVE">비활성</SelectItem>
+              <SelectItem value="PENDING">대기</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -8,7 +8,7 @@ export const userFormSchema = z.object({
   name: z.string().min(2, { message: "이름은 2글자 이상이어야 합니다." }),
   email: z.string().email({ message: "유효한 이메일 주소를 입력해주세요." }),
   role: z.string(),
-  status: z.enum(["active", "inactive", "pending"]),
+  status: z.enum(["ACTIVE", "INACTIVE", "PENDING"]),
 });
 
 export type UserFormValues = z.infer<typeof userFormSchema>;
@@ -18,7 +18,7 @@ export type User = {
   name: string
   email: string
   role: string
-  status: "active" | "inactive" | "pending"
+  status: "ACTIVE" | "INACTIVE" | "PENDING"
   createdAt: string
 }
 
