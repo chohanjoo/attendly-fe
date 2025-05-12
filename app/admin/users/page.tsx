@@ -58,6 +58,23 @@ export default function UsersPage() {
     }
   }
 
+  const renderRole = (role: User["role"]) => {
+    switch(role) {
+      case "ADMIN":
+        return "관리자"
+      case "MINISTER":
+        return "목회자"
+      case "VILLAGE_LEADER":
+        return "마을장"
+      case "LEADER":
+        return "리더"
+      case "MEMBER":
+        return "조원"
+      default:
+        return role
+    }
+  }
+
   const filteredUsers = () => {
     if (!data?.items) return []
     
@@ -116,14 +133,7 @@ export default function UsersPage() {
           </Link>
         </TableCell>
         <TableCell>{user.email}</TableCell>
-        <TableCell>
-          {user.role === "ADMIN" ? "관리자" :
-           user.role === "MINISTER" ? "목회자" :
-           user.role === "VILLAGE_LEADER" ? "마을장" :
-           user.role === "LEADER" ? "리더" :
-           user.role === "MEMBER" ? "조원" : 
-           user.role}
-        </TableCell>
+        <TableCell>{renderRole(user.role)}</TableCell>
         <TableCell>{renderStatus(user.status)}</TableCell>
         <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
       </TableRow>
