@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LucideIcon, Users, Calendar, BarChart3, Shield, Settings } from "lucide-react"
+import { LucideIcon, Users, Calendar, BarChart3, Shield, Settings, Building2 } from "lucide-react"
 
 type NavItem = {
   title: string
@@ -16,6 +16,11 @@ const navItems: NavItem[] = [
     title: "사용자 관리",
     href: "/admin/users",
     icon: Users,
+  },
+  {
+    title: "조직 관리",
+    href: "/admin/organization",
+    icon: Building2,
   },
   {
     title: "출석 관리",

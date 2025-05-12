@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Users, Calendar, BarChart3, Shield, Settings } from "lucide-react"
+import { Users, Calendar, BarChart3, Shield, Settings, Building2 } from "lucide-react"
 
 const featureCards = [
   {
@@ -11,6 +11,14 @@ const featureCards = [
     href: "/admin/users",
     color: "bg-blue-100 dark:bg-blue-900",
     textColor: "text-blue-600 dark:text-blue-100",
+  },
+  {
+    title: "조직 관리",
+    description: "부서, 마을, GBS 그룹 등의 조직 구조를 관리합니다",
+    icon: Building2,
+    href: "/admin/organization",
+    color: "bg-indigo-100 dark:bg-indigo-900",
+    textColor: "text-indigo-600 dark:text-indigo-100",
   },
   {
     title: "출석 관리",
