@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: attendly-fe
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_ENV=development
+      - NEXT_PUBLIC_ENABLE_API_LOGGING=true
+      - NEXT_TELEMETRY_DISABLED=1
+    volumes:
+      - .env.development:/app/.env.development
+    command: npx next dev -p 3000
+    restart: unless-stopped 
