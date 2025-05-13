@@ -56,7 +56,7 @@ type AttendanceRecord = {
   userId: number
   userName: string
   date: string
-  status: "present" | "absent" | "late" | "excused"
+  status: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED"
   eventType: string
   note?: string
 }
@@ -98,13 +98,13 @@ export default function AttendancePage() {
 
   const renderStatus = (status: AttendanceRecord["status"]) => {
     switch (status) {
-      case "present":
+      case "PRESENT":
         return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">출석</span>
-      case "absent":
+      case "ABSENT":
         return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">결석</span>
-      case "late":
+      case "LATE":
         return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">지각</span>
-      case "excused":
+      case "EXCUSED":
         return <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">사유</span>
       default:
         return null

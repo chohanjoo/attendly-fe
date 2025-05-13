@@ -35,12 +35,21 @@ export type UserResponse = {
   updatedAt: string
 }
 
-export const useUsers = (page: number, size: number, name: string) => {
+export const useUsers = (page: number, size: number, name: string, departmentId?: number, roles?: string[]) => {
   return useQuery({
-    queryKey: ["admin", "users", page, size, name],
+    queryKey: ["admin", "users", page, size, name, departmentId, roles],
     queryFn: async () => {
       const response = await api.get("/api/admin/users", {
-        params: { page, size: size, name: name },
+        params: { 
+          page, 
+          size, 
+          name,
+          departmentId,
+          ...(roles && roles.length > 0 ? { roles } : {})
+        },
+        paramsSerializer: {
+          indexes: null // 배열을 roles=LEADER&roles=MEMBER 형식으로 직렬화
+        }
       });
       return response.data.data;
     },

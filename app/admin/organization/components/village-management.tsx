@@ -98,11 +98,25 @@ export function VillageManagement() {
   const [leaderVillageId, setLeaderVillageId] = useState<number | null>(null)
   const [leaderVillageName, setLeaderVillageName] = useState<string>("")
   const [newLeaderId, setNewLeaderId] = useState<string>("")
+  
+  // 마을장 검색 필터 추가
+  const [leaderSearchTerm, setLeaderSearchTerm] = useState<string>("")
+  const [newLeaderSearchTerm, setNewLeaderSearchTerm] = useState<string>("")
 
   // 데이터 가져오기
   const { data: villagesData, isLoading: isVillagesLoading } = useVillages(departmentFilter)
   const { data: departmentsData } = useDepartments()
-  const { data: usersData } = useUsers(0, 100, "")
+  const { data: usersData } = useUsers(0, 100, "", newVillageDepartmentId ? parseInt(newVillageDepartmentId) : undefined, newVillageDepartmentId ? ["LEADER"] : undefined)
+  const { data: leaderUsersData } = useUsers(
+    0, 
+    100, 
+    "", 
+    leaderVillageId ? 
+      // 마을 데이터에서 부서 ID 찾기
+      villagesData?.items.find(v => v.id === leaderVillageId)?.departmentId : 
+      undefined, 
+    leaderVillageId ? ["LEADER"] : undefined
+  )
 
   // 마을 목록 필터링
   const filteredVillages = villagesData?.items.filter((village) =>
@@ -322,22 +336,43 @@ export function VillageManagement() {
                   <Label htmlFor="leader" className="text-right">
                     마을장 (선택)
                   </Label>
-                  <Select 
-                    value={newVillageLeaderId} 
-                    onValueChange={setNewVillageLeaderId}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="마을장 선택 (선택사항)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">미지정</SelectItem>
-                      {usersData?.items.map((user: UserResponse) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="col-span-3 space-y-2">
+                    <Input
+                      placeholder={newVillageDepartmentId ? "마을장 이름 검색" : "부서를 먼저 선택해주세요"}
+                      value={newLeaderSearchTerm}
+                      onChange={e => setNewLeaderSearchTerm(e.target.value)}
+                      disabled={!newVillageDepartmentId}
+                    />
+                    {newVillageDepartmentId && newLeaderSearchTerm && (
+                      <div className="border rounded-md max-h-40 overflow-y-auto">
+                        <div 
+                          className="p-2 hover:bg-accent cursor-pointer"
+                          onClick={() => {
+                            setNewVillageLeaderId("unassigned");
+                            setNewLeaderSearchTerm("");
+                          }}
+                        >
+                          미지정
+                        </div>
+                        {usersData?.items
+                          .filter((user: UserResponse) => 
+                            user.name.toLowerCase().includes(newLeaderSearchTerm.toLowerCase()))
+                          .map((user: UserResponse) => (
+                            <div 
+                              key={user.id} 
+                              className="p-2 hover:bg-accent cursor-pointer"
+                              onClick={() => {
+                                setNewVillageLeaderId(user.id.toString());
+                                setNewLeaderSearchTerm(user.name);
+                              }}
+                            >
+                              {user.name}
+                            </div>
+                          ))
+                        }
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -507,22 +542,42 @@ export function VillageManagement() {
                 <Label htmlFor="leader" className="text-right">
                   마을장
                 </Label>
-                <Select 
-                  value={newLeaderId} 
-                  onValueChange={setNewLeaderId}
-                >
-                  <SelectTrigger className="col-span-3" id="leader">
-                    <SelectValue placeholder="마을장 선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">마을장 해제</SelectItem>
-                    {usersData?.items.map((user: UserResponse) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="col-span-3 space-y-2">
+                  <Input
+                    placeholder="마을장 이름 검색"
+                    value={leaderSearchTerm}
+                    onChange={e => setLeaderSearchTerm(e.target.value)}
+                  />
+                  {leaderSearchTerm && (
+                    <div className="border rounded-md max-h-40 overflow-y-auto">
+                      <div 
+                        className="p-2 hover:bg-accent cursor-pointer"
+                        onClick={() => {
+                          setNewLeaderId("unassigned");
+                          setLeaderSearchTerm("마을장 해제");
+                        }}
+                      >
+                        마을장 해제
+                      </div>
+                      {leaderUsersData?.items
+                        .filter((user: UserResponse) => 
+                          user.name.toLowerCase().includes(leaderSearchTerm.toLowerCase()))
+                        .map((user: UserResponse) => (
+                          <div 
+                            key={user.id} 
+                            className="p-2 hover:bg-accent cursor-pointer"
+                            onClick={() => {
+                              setNewLeaderId(user.id.toString());
+                              setLeaderSearchTerm(user.name);
+                            }}
+                          >
+                            {user.name}
+                          </div>
+                        ))
+                      }
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             <DialogFooter>

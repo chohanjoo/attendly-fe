@@ -8,7 +8,7 @@ export type AttendanceRecord = {
   userId: number;
   userName: string;
   date: string;
-  status: "present" | "absent" | "late" | "excused";
+  status: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
   eventType: string;
   note?: string;
 }
@@ -23,14 +23,14 @@ export type AdminAttendanceResponse = {
 // 관리자 출석 데이터 조회 함수
 export const fetchAttendance = async (
   page: number, 
-  limit: number, 
+  size: number, 
   search: string,
   startDate?: string,
   endDate?: string,
   status?: string
 ) => {
   const response = await api.get<ApiResponse<AdminAttendanceResponse>>("/api/admin/attendance", {
-    params: { page, limit, search, startDate, endDate, status },
+    params: { page, size, search, startDate, endDate, status },
   });
   return response.data.data;
 };
