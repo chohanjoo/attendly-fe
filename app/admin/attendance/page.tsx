@@ -132,7 +132,7 @@ export default function AttendancePage() {
       )
     }
 
-    if (data?.records?.length === 0) {
+    if (data?.items?.length === 0) {
       return (
         <TableRow>
           <TableCell colSpan={6} className="text-center py-10">
@@ -142,7 +142,7 @@ export default function AttendancePage() {
       )
     }
 
-    return data?.records?.map((record: AttendanceRecord) => (
+    return data?.items?.map((record: AttendanceRecord) => (
       <TableRow key={record.id}>
         <TableCell>{record.id}</TableCell>
         <TableCell>

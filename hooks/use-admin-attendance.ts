@@ -14,10 +14,9 @@ export type AttendanceRecord = {
 }
 
 export type AdminAttendanceResponse = {
-  records: AttendanceRecord[];
-  totalPages: number;
-  currentPage: number;
-  totalElements: number;
+  items: AttendanceRecord[];
+  totalCount: number;
+  hasMore: boolean;
 }
 
 // 관리자 출석 데이터 조회 함수
