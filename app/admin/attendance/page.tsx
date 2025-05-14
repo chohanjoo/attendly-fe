@@ -370,38 +370,64 @@ export default function AttendancePage() {
                 className={page === 1 ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
-            {[...Array(Math.min(5, data?.totalPages || 1))].map((_, i) => {
-              const pageNumber = page - 2 + i
-              if (pageNumber < 1 || pageNumber > (data?.totalPages || 1)) return null
-              return (
-                <PaginationItem key={pageNumber}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setPage(pageNumber)
-                    }}
-                    isActive={pageNumber === page}
-                  >
-                    {pageNumber}
-                  </PaginationLink>
-                </PaginationItem>
-              )
-            })}
+            {(() => {
+              const totalCount = data?.totalCount || 0
+              const totalPages = Math.ceil(totalCount / limit)
+              
+              const currentPage = page
+              
+              if (totalPages <= 1) {
+                return (
+                  <PaginationItem key={1}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setPage(1)
+                      }}
+                      isActive={true}
+                    >
+                      1
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              }
+
+              let startPage = Math.max(1, currentPage - 2)
+              let endPage = Math.min(startPage + 4, totalPages)
+              
+              if (endPage - startPage < 4 && startPage > 1) {
+                startPage = Math.max(1, endPage - 4)
+              }
+              
+              return Array.from({ length: endPage - startPage + 1 }, (_, i) => {
+                const pageNumber = startPage + i
+                return (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setPage(pageNumber)
+                      }}
+                      isActive={pageNumber === currentPage}
+                    >
+                      {pageNumber}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              })
+            })()}
             <PaginationItem>
               <PaginationNext
                 href="#"
                 onClick={(e) => {
                   e.preventDefault()
-                  if (page < (data?.totalPages || 1)) setPage(page + 1)
+                  if (data?.hasMore) setPage(page + 1)
                 }}
-                aria-disabled={page >= (data?.totalPages || 1)}
-                tabIndex={page >= (data?.totalPages || 1) ? -1 : 0}
-                className={
-                  page >= (data?.totalPages || 1)
-                    ? "pointer-events-none opacity-50"
-                    : ""
-                }
+                aria-disabled={!data?.hasMore}
+                tabIndex={!data?.hasMore ? -1 : 0}
+                className={!data?.hasMore ? "pointer-events-none opacity-50" : ""}
               />
             </PaginationItem>
           </PaginationContent>
