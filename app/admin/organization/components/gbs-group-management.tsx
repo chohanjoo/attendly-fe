@@ -58,6 +58,16 @@ interface GbsGroup {
   memberCount: number
 }
 
+// GBS 그룹 멤버 타입 정의
+interface GbsMember {
+  id: number
+  userId: number
+  userName: string
+  gbsGroupId: number
+  startDate: string
+  endDate?: string
+}
+
 // 마을 타입 정의
 interface Village {
   id: number
@@ -71,61 +81,27 @@ interface User {
   role: string
 }
 
-// 모킹 데이터 - GBS 그룹
-const mockGbsGroups: GbsGroup[] = [
-  {
-    id: 1,
-    name: "동문마을 1조",
-    villageId: 1,
-    villageName: "동문마을",
-    termStartDate: "2023-01-01",
-    termEndDate: "2023-06-30",
-    leaderId: 101,
-    leaderName: "김철수",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-    memberCount: 5
-  },
-  {
-    id: 2,
-    name: "동문마을 2조",
-    villageId: 1,
-    villageName: "동문마을",
-    termStartDate: "2023-01-01",
-    termEndDate: "2023-06-30",
-    leaderId: 102,
-    leaderName: "이영희",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-    memberCount: 4
-  },
-  {
-    id: 3,
-    name: "서문마을 1조",
-    villageId: 2,
-    villageName: "서문마을",
-    termStartDate: "2023-01-01",
-    termEndDate: "2023-06-30",
-    createdAt: "2023-01-01T00:00:00.000Z",
-    updatedAt: "2023-01-01T00:00:00.000Z",
-    memberCount: 0
-  },
-]
+// API 응답 타입 정의
+interface ApiResponse<T> {
+  success: boolean
+  timestamp: string
+  data: T
+  message: string
+  code: number
+}
 
-// 모킹 데이터 - 마을
-const mockVillages: Village[] = [
-  { id: 1, name: "동문마을" },
-  { id: 2, name: "서문마을" },
-  { id: 3, name: "남문마을" },
-]
+interface PageResponse<T> {
+  items: T[]
+  totalCount: number
+  hasMore: boolean
+}
 
-// 모킹 데이터 - 사용자
-const mockUsers: User[] = [
-  { id: 101, name: "김철수", role: "LEADER" },
-  { id: 102, name: "이영희", role: "LEADER" },
-  { id: 103, name: "박지성", role: "LEADER" },
-  { id: 104, name: "최민수", role: "LEADER" },
-]
+// API 엔드포인트
+const API_ENDPOINTS = {
+  GBS_GROUPS: "/api/admin/organization/gbs-groups",
+  VILLAGES: "/api/admin/organization/villages",
+  USERS: "/api/admin/users",
+}
 
 export function GbsGroupManagement() {
   const { toast } = useToast()
@@ -140,6 +116,8 @@ export function GbsGroupManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isLeaderDialogOpen, setIsLeaderDialogOpen] = useState(false)
+  const [isMembersDialogOpen, setIsMembersDialogOpen] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState<GbsGroup | null>(null)
   
   // 새 GBS 그룹 폼 상태
   const [newGbsName, setNewGbsName] = useState("")
@@ -159,15 +137,108 @@ export function GbsGroupManagement() {
   const [leaderGbs, setLeaderGbs] = useState<GbsGroup | null>(null)
   const [newLeaderId, setNewLeaderId] = useState<string>("")
 
-  useEffect(() => {
-    // API 호출을 모킹 - 실제 구현 시 API 호출로 대체
-    setTimeout(() => {
-      setGbsGroups(mockGbsGroups)
-      setVillages(mockVillages)
-      setUsers(mockUsers)
+  // GBS 그룹 멤버 데이터 상태
+  const [groupMembers, setGroupMembers] = useState<{ [key: number]: GbsMember[] }>({})
+  
+  // GBS 그룹 목록 가져오기
+  const fetchGbsGroups = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.GBS_GROUPS)
+      if (!response.ok) throw new Error('GBS 그룹 데이터를 불러오는데 실패했습니다.')
+      
+      const data: ApiResponse<PageResponse<GbsGroup>> = await response.json()
+      setGbsGroups(data.data.items)
+    } catch (error) {
+      console.error('GBS 그룹 데이터 로딩 실패:', error)
+      toast({
+        title: '오류',
+        description: '데이터를 불러오는데 실패했습니다.',
+        variant: 'destructive',
+      })
+    }
+  }
+  
+  // 마을 목록 가져오기
+  const fetchVillages = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.VILLAGES)
+      if (!response.ok) throw new Error('마을 데이터를 불러오는데 실패했습니다.')
+      
+      const data: ApiResponse<PageResponse<Village>> = await response.json()
+      setVillages(data.data.items)
+    } catch (error) {
+      console.error('마을 데이터 로딩 실패:', error)
+      toast({
+        title: '오류',
+        description: '마을 데이터를 불러오는데 실패했습니다.',
+        variant: 'destructive',
+      })
+    }
+  }
+  
+  // 리더 사용자 목록 가져오기
+  const fetchLeaders = async () => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.USERS}?roles=LEADER`)
+      if (!response.ok) throw new Error('리더 데이터를 불러오는데 실패했습니다.')
+      
+      const data: ApiResponse<PageResponse<User>> = await response.json()
+      setUsers(data.data.items)
+    } catch (error) {
+      console.error('리더 데이터 로딩 실패:', error)
+      toast({
+        title: '오류',
+        description: '리더 데이터를 불러오는데 실패했습니다.',
+        variant: 'destructive',
+      })
+    }
+  }
+  
+  // GBS 그룹 멤버 가져오기
+  const fetchGroupMembers = async (groupId: number) => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${groupId}/members`)
+      if (!response.ok) throw new Error('GBS 그룹 멤버 데이터를 불러오는데 실패했습니다.')
+      
+      const data: ApiResponse<GbsMember[]> = await response.json()
+      setGroupMembers(prev => ({
+        ...prev,
+        [groupId]: data.data
+      }))
+    } catch (error) {
+      console.error(`그룹 ${groupId}의 멤버 데이터 로딩 실패:`, error)
+      // 실패해도 UI에는 영향이 없으므로 토스트 표시하지 않음
+    }
+  }
+  
+  // 모든 데이터 로딩
+  const loadAllData = async () => {
+    setIsLoading(true)
+    try {
+      await Promise.all([
+        fetchGbsGroups(),
+        fetchVillages(),
+        fetchLeaders()
+      ])
       setIsLoading(false)
-    }, 500)
+    } catch (error) {
+      console.error('데이터 로딩 실패:', error)
+      setIsLoading(false)
+    }
+  }
+  
+  useEffect(() => {
+    loadAllData()
   }, [])
+  
+  // GBS 그룹 로드 후 각 그룹의 멤버 데이터도 로드
+  useEffect(() => {
+    if (gbsGroups.length > 0) {
+      gbsGroups.forEach(group => {
+        fetchGroupMembers(group.id)
+      })
+    }
+  }, [gbsGroups])
 
   // GBS 그룹 목록 필터링
   const filteredGbsGroups = gbsGroups.filter((group) => {
@@ -184,7 +255,7 @@ export function GbsGroupManagement() {
   })
 
   // GBS 그룹 추가
-  const handleAddGbs = () => {
+  const handleAddGbs = async () => {
     if (!newGbsName.trim()) {
       toast({
         title: "오류",
@@ -212,46 +283,55 @@ export function GbsGroupManagement() {
       return
     }
 
-    const villageId = parseInt(newGbsVillageId)
-    const villageName = villages.find(v => v.id === villageId)?.name || ""
-    
-    let leaderId: number | undefined = undefined
-    let leaderName: string | undefined = undefined
-    
-    if (newGbsLeaderId) {
-      leaderId = parseInt(newGbsLeaderId)
-      leaderName = users.find(u => u.id === leaderId)?.name
-    }
-
-    // 실제 구현 시 API 호출로 대체
-    const newGbsGroup: GbsGroup = {
-      id: gbsGroups.length > 0 ? Math.max(...gbsGroups.map(g => g.id)) + 1 : 1,
+    const requestBody = {
       name: newGbsName,
-      villageId,
-      villageName,
+      villageId: parseInt(newGbsVillageId),
       termStartDate: newGbsTermStart,
       termEndDate: newGbsTermEnd,
-      leaderId,
-      leaderName,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      memberCount: 0
     }
 
-    setGbsGroups([...gbsGroups, newGbsGroup])
-    
-    // 폼 초기화
-    setNewGbsName("")
-    setNewGbsVillageId("")
-    setNewGbsTermStart("")
-    setNewGbsTermEnd("")
-    setNewGbsLeaderId("")
-    setIsAddDialogOpen(false)
-    
-    toast({
-      title: "GBS 그룹 추가 완료",
-      description: `${newGbsName} 그룹이 추가되었습니다.`,
-    })
+    if (newGbsLeaderId) {
+      // @ts-ignore: leaderId 필드는 옵셔널이지만 API는 지원함
+      requestBody.leaderId = parseInt(newGbsLeaderId)
+    }
+
+    try {
+      setIsLoading(true)
+      const response = await fetch(API_ENDPOINTS.GBS_GROUPS, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) throw new Error('GBS 그룹 추가에 실패했습니다.')
+      
+      // 전체 데이터 새로고침
+      await loadAllData()
+
+      // 폼 초기화
+      setNewGbsName("")
+      setNewGbsVillageId("")
+      setNewGbsTermStart("")
+      setNewGbsTermEnd("")
+      setNewGbsLeaderId("")
+      setIsAddDialogOpen(false)
+      
+      toast({
+        title: "GBS 그룹 추가 완료",
+        description: `${newGbsName} 그룹이 추가되었습니다.`,
+      })
+    } catch (error) {
+      console.error('GBS 그룹 추가 실패:', error)
+      toast({
+        title: "오류",
+        description: "GBS 그룹 추가에 실패했습니다.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // GBS 그룹 수정 다이얼로그 열기
@@ -265,7 +345,7 @@ export function GbsGroupManagement() {
   }
 
   // GBS 그룹 수정
-  const handleEditGbs = () => {
+  const handleEditGbs = async () => {
     if (!editGbs) return
     
     if (!editGbsName.trim()) {
@@ -295,43 +375,73 @@ export function GbsGroupManagement() {
       return
     }
 
-    const villageId = parseInt(editGbsVillageId)
-    const villageName = villages.find(v => v.id === villageId)?.name || ""
+    const requestBody = {
+      name: editGbsName,
+      villageId: parseInt(editGbsVillageId),
+      termStartDate: editGbsTermStart,
+      termEndDate: editGbsTermEnd,
+    }
 
-    // 실제 구현 시 API 호출로 대체
-    const updatedGbsGroups = gbsGroups.map(group => 
-      group.id === editGbs.id 
-        ? { 
-            ...group, 
-            name: editGbsName, 
-            villageId, 
-            villageName,
-            termStartDate: editGbsTermStart,
-            termEndDate: editGbsTermEnd,
-            updatedAt: new Date().toISOString() 
-          } 
-        : group
-    )
+    try {
+      setIsLoading(true)
+      const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${editGbs.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
 
-    setGbsGroups(updatedGbsGroups)
-    setIsEditDialogOpen(false)
-    
-    toast({
-      title: "GBS 그룹 수정 완료",
-      description: `GBS 그룹 정보가 수정되었습니다.`,
-    })
+      if (!response.ok) throw new Error('GBS 그룹 수정에 실패했습니다.')
+      
+      // 전체 데이터 새로고침
+      await loadAllData()
+      
+      setIsEditDialogOpen(false)
+      
+      toast({
+        title: "GBS 그룹 수정 완료",
+        description: `GBS 그룹 정보가 수정되었습니다.`,
+      })
+    } catch (error) {
+      console.error('GBS 그룹 수정 실패:', error)
+      toast({
+        title: "오류",
+        description: "GBS 그룹 수정에 실패했습니다.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // GBS 그룹 삭제
-  const handleDeleteGbs = (id: number) => {
-    // 실제 구현 시 API 호출로 대체
-    const updatedGbsGroups = gbsGroups.filter(group => group.id !== id)
-    setGbsGroups(updatedGbsGroups)
-    
-    toast({
-      title: "GBS 그룹 삭제 완료",
-      description: "GBS 그룹이 삭제되었습니다.",
-    })
+  const handleDeleteGbs = async (id: number) => {
+    try {
+      setIsLoading(true)
+      const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) throw new Error('GBS 그룹 삭제에 실패했습니다.')
+      
+      // 전체 데이터 새로고침
+      await loadAllData()
+      
+      toast({
+        title: "GBS 그룹 삭제 완료",
+        description: "GBS 그룹이 삭제되었습니다.",
+      })
+    } catch (error) {
+      console.error('GBS 그룹 삭제 실패:', error)
+      toast({
+        title: "오류",
+        description: "GBS 그룹 삭제에 실패했습니다.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // GBS 리더 지정 다이얼로그 열기
@@ -342,54 +452,67 @@ export function GbsGroupManagement() {
   }
 
   // GBS 리더 지정
-  const handleAssignLeader = () => {
+  const handleAssignLeader = async () => {
     if (!leaderGbs) return
     
-    if (!newLeaderId) {
-      // 리더 해제
-      const updatedGbsGroups = gbsGroups.map(group => 
-        group.id === leaderGbs.id 
-          ? { 
-              ...group, 
-              leaderId: undefined, 
-              leaderName: undefined,
-              updatedAt: new Date().toISOString() 
-            } 
-          : group
-      )
-
-      setGbsGroups(updatedGbsGroups)
+    try {
+      setIsLoading(true)
+      
+      if (!newLeaderId) {
+        // 리더 해제 - 리더 해제 API 호출
+        const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${leaderGbs.id}/leaders`, {
+          method: 'DELETE',
+        })
+        
+        if (!response.ok) throw new Error('리더 해제에 실패했습니다.')
+        
+        await loadAllData()
+        setIsLeaderDialogOpen(false)
+        
+        toast({
+          title: "리더 해제 완료",
+          description: `리더가 해제되었습니다.`,
+        })
+        return
+      }
+      
+      // 리더 지정
+      const requestBody = {
+        leaderId: parseInt(newLeaderId),
+        startDate: new Date().toISOString().split('T')[0], // 현재 날짜
+      }
+      
+      const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${leaderGbs.id}/leaders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      })
+      
+      if (!response.ok) throw new Error('리더 지정에 실패했습니다.')
+      
+      // 데이터 갱신
+      await loadAllData()
+      
+      const userName = users.find(u => u.id === parseInt(newLeaderId))?.name || "선택된 사용자"
+      
       setIsLeaderDialogOpen(false)
       
       toast({
-        title: "리더 해제 완료",
-        description: `리더가 해제되었습니다.`,
+        title: "리더 지정 완료",
+        description: `${userName}님이 ${leaderGbs.name}의 리더로 지정되었습니다.`,
       })
-      return
+    } catch (error) {
+      console.error('리더 지정/해제 실패:', error)
+      toast({
+        title: "오류",
+        description: "리더 지정/해제에 실패했습니다.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
-
-    const userId = parseInt(newLeaderId)
-    const userName = users.find(u => u.id === userId)?.name || ""
-
-    // 실제 구현 시 API 호출로 대체
-    const updatedGbsGroups = gbsGroups.map(group => 
-      group.id === leaderGbs.id 
-        ? { 
-            ...group, 
-            leaderId: userId, 
-            leaderName: userName,
-            updatedAt: new Date().toISOString() 
-          } 
-        : group
-    )
-
-    setGbsGroups(updatedGbsGroups)
-    setIsLeaderDialogOpen(false)
-    
-    toast({
-      title: "리더 지정 완료",
-      description: `${userName}님이 ${leaderGbs.name}의 리더로 지정되었습니다.`,
-    })
   }
 
   return (
@@ -558,7 +681,19 @@ export function GbsGroupManagement() {
                       <span className="text-muted-foreground">미지정</span>
                     )}
                   </TableCell>
-                  <TableCell>{group.memberCount}명</TableCell>
+                  <TableCell>
+                    {group.memberCount}명
+                    {groupMembers[group.id] && groupMembers[group.id].length > 0 && (
+                      <div className="text-xs text-muted-foreground mt-1 cursor-pointer hover:underline" 
+                        onClick={() => {
+                          setSelectedGroup(group)
+                          setIsMembersDialogOpen(true)
+                        }}>
+                        {groupMembers[group.id].slice(0, 3).map(member => member.userName).join(', ')}
+                        {groupMembers[group.id].length > 3 && ` 외 ${groupMembers[group.id].length - 3}명`}
+                      </div>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
@@ -721,6 +856,50 @@ export function GbsGroupManagement() {
             </div>
             <DialogFooter>
               <Button type="submit" onClick={handleAssignLeader}>저장</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* GBS 멤버 목록 다이얼로그 */}
+        <Dialog open={isMembersDialogOpen} onOpenChange={setIsMembersDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>GBS 그룹 조원 목록</DialogTitle>
+              <DialogDescription>
+                {selectedGroup?.name} 그룹의 조원 목록입니다.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[400px] overflow-y-auto">
+              {selectedGroup && groupMembers[selectedGroup.id] && groupMembers[selectedGroup.id].length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>이름</TableHead>
+                      <TableHead>시작일</TableHead>
+                      <TableHead>종료일</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {groupMembers[selectedGroup.id].map((member) => (
+                      <TableRow key={member.id}>
+                        <TableCell className="font-medium">{member.userName}</TableCell>
+                        <TableCell>{new Date(member.startDate).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {member.endDate ? new Date(member.endDate).toLocaleDateString() : 
+                            <span className="text-muted-foreground">미설정</span>}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  조원이 없습니다.
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setIsMembersDialogOpen(false)}>닫기</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
