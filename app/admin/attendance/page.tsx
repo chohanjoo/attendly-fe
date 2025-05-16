@@ -45,6 +45,7 @@ import { ko } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { useAdminAttendance } from "@/hooks/use-admin-attendance"
+import CustomPagination from "@/components/ui/custom-pagination"
 
 type DateRange = {
   from: Date | undefined
@@ -332,107 +333,14 @@ export default function AttendancePage() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-muted-foreground">
-            페이지당 표시:
-          </p>
-          <Select
-            value={String(limit)}
-            onValueChange={(value) => {
-              setLimit(Number(value))
-              setPage(1)
-            }}
-          >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={limit} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
-                  if (page > 1) setPage(page - 1)
-                }}
-                aria-disabled={page === 1}
-                tabIndex={page === 1 ? -1 : 0}
-                className={page === 1 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            {(() => {
-              const totalCount = data?.totalCount || 0
-              const totalPages = Math.ceil(totalCount / limit)
-              
-              const currentPage = page
-              
-              if (totalPages <= 1) {
-                return (
-                  <PaginationItem key={1}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setPage(1)
-                      }}
-                      isActive={true}
-                    >
-                      1
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              }
-
-              let startPage = Math.max(1, currentPage - 2)
-              let endPage = Math.min(startPage + 4, totalPages)
-              
-              if (endPage - startPage < 4 && startPage > 1) {
-                startPage = Math.max(1, endPage - 4)
-              }
-              
-              return Array.from({ length: endPage - startPage + 1 }, (_, i) => {
-                const pageNumber = startPage + i
-                return (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setPage(pageNumber)
-                      }}
-                      isActive={pageNumber === currentPage}
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              })
-            })()}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
-                  if (data?.hasMore) setPage(page + 1)
-                }}
-                aria-disabled={!data?.hasMore}
-                tabIndex={!data?.hasMore ? -1 : 0}
-                className={!data?.hasMore ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <CustomPagination
+        page={page}
+        size={limit}
+        totalCount={data?.totalCount || 0}
+        hasMore={!!data?.hasMore}
+        onPageChange={setPage}
+        onSizeChange={setLimit}
+      />
     </div>
   )
 } 

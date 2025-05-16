@@ -29,6 +29,7 @@ import {
 import { UserPlus, Search, Filter } from "lucide-react"
 import Link from "next/link"
 import { useUsers, User } from "@/hooks/use-users"
+import CustomPagination from "@/components/ui/custom-pagination"
 
 export default function UsersPage() {
   const [page, setPage] = useState(0)
@@ -211,114 +212,15 @@ export default function UsersPage() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="text-sm text-muted-foreground">
-            페이지당 표시:
-          </p>
-          <Select
-            value={String(size)}
-            onValueChange={(value) => {
-              setSize(Number(value))
-              setPage(0)
-            }}
-          >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={size} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5</SelectItem>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
-                  if (page > 0) setPage(page - 1)
-                }}
-                aria-disabled={page === 0}
-                tabIndex={page === 0 ? -1 : 0}
-                className={page === 0 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-            {(() => {
-              // API에서 제공하는 totalCount 사용
-              const totalCount = data?.totalCount || 0
-              const totalPages = Math.ceil(totalCount / size)
-              
-              // 현재 페이지 (1부터 시작하는 표시용)
-              const currentPage = page + 1
-              
-              // 최소 1페이지는 항상 표시
-              if (totalPages <= 1) {
-                return (
-                  <PaginationItem key={1}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setPage(0)
-                      }}
-                      isActive={true}
-                    >
-                      1
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              }
-
-              // 표시할 페이지 범위 계산 (최대 5개)
-              let startPage = Math.max(1, currentPage - 2)
-              let endPage = Math.min(startPage + 4, totalPages)
-              
-              // 5개 페이지를 채우기 위한 조정
-              if (endPage - startPage < 4 && startPage > 1) {
-                startPage = Math.max(1, endPage - 4)
-              }
-              
-              // 페이지 버튼 배열 생성
-              return Array.from({ length: endPage - startPage + 1 }, (_, i) => {
-                const pageNumber = startPage + i
-                return (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationLink
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setPage(pageNumber - 1) // 내부 상태는 0부터 시작
-                      }}
-                      isActive={pageNumber === currentPage}
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              })
-            })()}
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
-                  // data.hasMore 정보 활용
-                  if (data?.hasMore) setPage(page + 1)
-                }}
-                aria-disabled={!data?.hasMore}
-                tabIndex={!data?.hasMore ? -1 : 0}
-                className={!data?.hasMore ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+      <CustomPagination
+        page={page}
+        size={size}
+        totalCount={data?.totalCount || 0}
+        hasMore={!!data?.hasMore}
+        onPageChange={setPage}
+        onSizeChange={setSize}
+        isPageZeroIndexed={true}
+      />
     </div>
   )
 } 
