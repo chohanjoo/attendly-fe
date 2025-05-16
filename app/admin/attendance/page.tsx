@@ -44,7 +44,7 @@ import { format } from "date-fns"
 import { ko } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { useAdminAttendance } from "@/hooks/use-admin-attendance"
+import { useAdminAttendance, useAdminAttendanceStatistics } from "@/hooks/use-admin-attendance"
 import CustomPagination from "@/components/ui/custom-pagination"
 
 type DateRange = {
@@ -82,6 +82,8 @@ export default function AttendancePage() {
     dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
     statusFilter
   );
+
+  const { data: statistics, isLoading: statsLoading } = useAdminAttendanceStatistics();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -194,9 +196,13 @@ export default function AttendancePage() {
             <CardTitle className="text-sm font-medium">총 출석률</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">84.5%</div>
+            <div className="text-2xl font-bold">
+              {statsLoading ? "로딩중..." : `${statistics?.attendanceRate?.toFixed(1) || '0.0'}%`}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              전월 대비 +2.5%
+              {statsLoading ? "" : 
+                `전월 대비 ${statistics?.attendanceRateDifference && statistics.attendanceRateDifference > 0 ? '+' : ''}${statistics?.attendanceRateDifference?.toFixed(1) || '0.0'}%`
+              }
             </p>
           </CardContent>
         </Card>
@@ -205,7 +211,9 @@ export default function AttendancePage() {
             <CardTitle className="text-sm font-medium">총 출석 수</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,253</div>
+            <div className="text-2xl font-bold">
+              {statsLoading ? "로딩중..." : statistics?.totalAttendanceCount?.toLocaleString() || '0'}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               이번 달 기준
             </p>
@@ -216,9 +224,13 @@ export default function AttendancePage() {
             <CardTitle className="text-sm font-medium">결석률</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12.3%</div>
+            <div className="text-2xl font-bold">
+              {statsLoading ? "로딩중..." : `${statistics?.absentRate?.toFixed(1) || '0.0'}%`}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              전월 대비 -1.2%
+              {statsLoading ? "" : 
+                `전월 대비 ${statistics?.absentRateDifference && statistics.absentRateDifference > 0 ? '+' : ''}${statistics?.absentRateDifference?.toFixed(1) || '0.0'}%`
+              }
             </p>
           </CardContent>
         </Card>
@@ -227,9 +239,13 @@ export default function AttendancePage() {
             <CardTitle className="text-sm font-medium">지각률</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3.2%</div>
+            <div className="text-2xl font-bold">
+              {statsLoading ? "로딩중..." : `${statistics?.lateRate?.toFixed(1) || '0.0'}%`}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              전월 대비 -0.4%
+              {statsLoading ? "" : 
+                `전월 대비 ${statistics?.lateRateDifference && statistics.lateRateDifference > 0 ? '+' : ''}${statistics?.lateRateDifference?.toFixed(1) || '0.0'}%`
+              }
             </p>
           </CardContent>
         </Card>
@@ -304,10 +320,10 @@ export default function AttendancePage() {
               <SelectValue placeholder="상태 필터" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="present">출석</SelectItem>
-              <SelectItem value="absent">결석</SelectItem>
-              <SelectItem value="late">지각</SelectItem>
-              <SelectItem value="excused">사유</SelectItem>
+              <SelectItem value="PRESENT">출석</SelectItem>
+              <SelectItem value="ABSENT">결석</SelectItem>
+              <SelectItem value="LATE">지각</SelectItem>
+              <SelectItem value="EXCUSED">사유</SelectItem>
             </SelectContent>
           </Select>
           
