@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
   Card,
@@ -28,43 +27,14 @@ import {
   Trello,
   Calendar,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { UserVillageResponse } from "@/types/user";
+import { useVillage } from "@/hooks/useVillage";
 
-export default function VillageDetailPage({ params }: { params: { id: string } }) {
+export default function VillageDetailPage() {
   const router = useRouter();
-  const { toast } = useToast();
-  const villageId = parseInt(params.id);
+  const params = useParams();
+  const villageId = parseInt(params.id as string);
   
-  const [village, setVillage] = useState<UserVillageResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchVillageData = async () => {
-      setIsLoading(true);
-      try {
-        // 실제 API 연동
-        const response = await fetch(`/api/village/${villageId}`);
-        if (!response.ok) throw new Error('마을 정보를 불러오는데 실패했습니다.');
-        
-        const data = await response.json();
-        setVillage(data.data);
-      } catch (error) {
-        console.error("마을 데이터 조회 실패:", error);
-        toast({
-          title: '오류',
-          description: '마을 정보를 불러오는데 실패했습니다.',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (villageId) {
-      fetchVillageData();
-    }
-  }, [villageId, toast]);
+  const { village, isLoading } = useVillage(villageId);
 
   if (isLoading) {
     return (

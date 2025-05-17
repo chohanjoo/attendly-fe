@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import api from '@/lib/axios';
 import { 
   KanbanCard, 
   KanbanColumn, 
@@ -57,10 +58,7 @@ export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
     
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/village/${villageId}/members`);
-      if (!response.ok) throw new Error('조원 목록을 불러오는데 실패했습니다.');
-      
-      const data = await response.json();
+      const response = await api.get(`/api/village/${villageId}/members`);
       
       // 대기열 컬럼에 멤버 카드 추가
       setColumns(prev => {
@@ -68,7 +66,7 @@ export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
         const waitingColumn = newColumns.find(col => col.id === COLUMN_IDS.WAITING);
         
         if (waitingColumn) {
-          waitingColumn.cards = data.data.map((member: any) => ({
+          waitingColumn.cards = response.data.data.map((member: any) => ({
             id: Math.random().toString(36).substring(2, 9),
             userId: member.id,
             userName: member.name,
@@ -97,13 +95,10 @@ export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
     if (!villageId) return;
     
     try {
-      const response = await fetch(`/api/village/${villageId}/leaders`);
-      if (!response.ok) throw new Error('리더 목록을 불러오는데 실패했습니다.');
-      
-      const data = await response.json();
+      const response = await api.get(`/api/village/${villageId}/leader-candidates`);
       
       // 리더 목록으로 라벨 생성
-      const newLabels = data.data.map((leader: any) => ({
+      const newLabels = response.data.data.map((leader: any) => ({
         id: leader.id,
         name: leader.name,
         leaderId: leader.id,
@@ -253,17 +248,7 @@ export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
     };
 
     try {
-      const response = await fetch('/api/gbs/assignments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!response.ok) throw new Error('GBS 배치 저장에 실패했습니다.');
-      
-      const result = await response.json();
+      const response = await api.post('/api/gbs/assignments', requestData);
       
       toast({
         title: '성공',
@@ -271,7 +256,7 @@ export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
         variant: 'default',
       });
       
-      return result;
+      return response.data;
     } catch (error) {
       console.error('GBS 배치 저장 실패:', error);
       toast({

@@ -5,6 +5,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams } from 'next/navigation';
 import { useKanbanBoard } from '@/hooks/use-kanban-board';
+import { useVillage } from '@/hooks/useVillage';
 import { KanbanColumn } from '@/components/gbs/KanbanColumn';
 import { LabelSelector } from '@/components/gbs/LabelSelector';
 import { Button } from '@/components/ui/button';
@@ -15,15 +16,15 @@ import { Calendar, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { UserVillageResponse } from '@/types/user';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
-import { DatePicker } from '@/components/ui/date-picker';
 
 export default function GbsAssignmentPage() {
   const params = useParams();
   const villageId = Number(params.id);
   const { toast } = useToast();
-  const [village, setVillage] = useState<UserVillageResponse | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const [isVillageLoading, setIsVillageLoading] = useState(true);
+  
+  // useVillage 훅을 사용하여 마을 정보 로드
+  const { village, isLoading: isVillageLoading } = useVillage(villageId);
 
   const {
     columns,
@@ -38,32 +39,6 @@ export default function GbsAssignmentPage() {
     removeLabelFromCard,
     saveAssignments
   } = useKanbanBoard({ villageId });
-
-  // 마을 정보 로드
-  useEffect(() => {
-    async function loadVillage() {
-      if (!villageId) return;
-      
-      try {
-        const response = await fetch(`/api/village/${villageId}`);
-        if (!response.ok) throw new Error('마을 정보를 불러오는데 실패했습니다.');
-        
-        const data = await response.json();
-        setVillage(data.data);
-        setIsVillageLoading(false);
-      } catch (error) {
-        console.error('마을 정보 로드 실패:', error);
-        toast({
-          title: '오류',
-          description: '마을 정보를 불러오는데 실패했습니다.',
-          variant: 'destructive',
-        });
-        setIsVillageLoading(false);
-      }
-    }
-    
-    loadVillage();
-  }, [villageId, toast]);
 
   // 라벨 선택 처리
   const handleSelectLabel = (labelId: number) => {
