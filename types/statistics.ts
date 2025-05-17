@@ -61,7 +61,8 @@ export interface DepartmentStatistics {
   departmentName: string;
   startDate: string;
   endDate: string;
-  villageStats: VillageStatistics[];
+  villages: VillageStatistics[];
+  weeklyStats: WeeklyStatistics[];
   totalMembers: number;
   attendedMembers: number;
   attendanceRate: number;

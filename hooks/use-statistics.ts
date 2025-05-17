@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { toast } from "sonner";
-import { VillageStatistics, VillageAttendanceResponse } from "@/types/statistics";
+import { VillageStatistics, VillageAttendanceResponse, DepartmentStatistics } from "@/types/statistics";
 import { UserVillageResponse } from "@/types/user";
 import { AttendanceItemRequest } from "@/types/attendance";
 import { ApiResponse } from "@/types/api";
+import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 /**
  * 현재, 사용자의 마을 정보 조회 훅
@@ -162,4 +164,87 @@ export const getOneMonthAgo = (): string => {
  */
 export const getTodayFormatted = (): string => {
   return new Date().toISOString().split('T')[0];
+};
+
+/**
+ * 부서 통계 데이터 조회 훅
+ */
+export const useDepartmentStatistics = (
+  departmentId: number,
+  dateRange: DateRange | undefined
+) => {
+  return useQuery({
+    queryKey: ["departmentStatistics", departmentId, dateRange],
+    queryFn: async () => {
+      if (!dateRange?.from) {
+        throw new Error("날짜를 선택해주세요");
+      }
+
+      const startDate = format(dateRange.from, "yyyy-MM-dd");
+      const endDate = dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : startDate;
+
+      try {
+        console.log(`통계 데이터 요청: departmentId=${departmentId}, startDate=${startDate}, endDate=${endDate}`);
+        
+        // API 경로 테스트 - 백엔드 구현에 따라 수정이 필요할 수 있음
+        // 두 가지 경로 모두 시도 (admin, minister)
+        let response;
+        
+        try {
+          response = await api.get<ApiResponse<DepartmentStatistics>>(
+            `/api/admin/departments/${departmentId}/statistics`,
+            {
+              params: {
+                startDate,
+                endDate,
+              },
+            }
+          );
+        } catch (adminApiError) {
+          console.log("Admin API 호출 실패, minister API 시도:", adminApiError);
+          
+          // admin API 실패 시 minister API 시도
+          response = await api.get<ApiResponse<DepartmentStatistics>>(
+            `/api/admin/departments/${departmentId}/statistics`,
+            {
+              params: {
+                startDate,
+                endDate,
+              },
+            }
+          );
+        }
+        
+        console.log("통계 응답 데이터:", response.data);
+        
+        if (!response.data.success) {
+          throw new Error(response.data.message || "데이터를 불러오는데 실패했습니다");
+        }
+        
+        return response.data.data;
+      } catch (error) {
+        console.error("통계 데이터 요청 오류:", error);
+        throw error;
+      }
+    },
+    enabled: !!dateRange?.from,
+  });
+};
+
+/**
+ * 부서 통계 엑셀 다운로드 함수
+ */
+export const downloadDepartmentStatisticsExcel = (
+  departmentId: number, 
+  dateRange: DateRange | undefined
+) => {
+  if (!dateRange?.from) {
+    toast.error("날짜를 선택해주세요");
+    return;
+  }
+
+  const startDate = format(dateRange.from, "yyyy-MM-dd");
+  const endDate = dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : startDate;
+  
+  window.location.href = `/api/admin/departments/${departmentId}/statistics/download?startDate=${startDate}&endDate=${endDate}&format=xls`;
 }; 
