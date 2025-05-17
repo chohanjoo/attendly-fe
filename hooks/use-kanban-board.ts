@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import api from '@/lib/axios';
 import { 
@@ -38,6 +38,7 @@ interface UseKanbanBoardProps {
 
 export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
   const { toast } = useToast();
+  const isMovingRef = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
   const [columns, setColumns] = useState<KanbanColumn[]>([
     { id: COLUMN_IDS.WAITING, title: '대기', cards: [] },
@@ -66,7 +67,7 @@ export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
         const waitingColumn = newColumns.find(col => col.id === COLUMN_IDS.WAITING);
         
         if (waitingColumn) {
-          waitingColumn.cards = response.data.data.map((member: any) => ({
+          waitingColumn.cards = response.data.data.items.map((member: any) => ({
             id: Math.random().toString(36).substring(2, 9),
             userId: member.id,
             userName: member.name,
@@ -98,7 +99,7 @@ export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
       const response = await api.get(`/api/village/${villageId}/leader-candidates`);
       
       // 리더 목록으로 라벨 생성
-      const newLabels = response.data.data.map((leader: any) => ({
+      const newLabels = response.data.data.items.map((leader: any) => ({
         id: leader.id,
         name: leader.name,
         leaderId: leader.id,
@@ -127,30 +128,42 @@ export function useKanbanBoard({ villageId }: UseKanbanBoardProps) {
   }, [villageId, loadMembers, loadLeaders]);
 
   // 카드 이동 처리
-  const moveCard = (
-    sourceColumnId: string,
-    destinationColumnId: string,
-    sourceIndex: number,
-    destinationIndex: number,
-  ) => {
-    setColumns(prevColumns => {
-      const newColumns = [...prevColumns];
-      
-      // 원본 컬럼에서 카드 제거
-      const sourceColumn = newColumns.find(col => col.id === sourceColumnId);
-      if (!sourceColumn) return prevColumns;
-      
-      const [movedCard] = sourceColumn.cards.splice(sourceIndex, 1);
-      
-      // 목적지 컬럼에 카드 추가
-      const destinationColumn = newColumns.find(col => col.id === destinationColumnId);
-      if (!destinationColumn) return prevColumns;
-      
-      destinationColumn.cards.splice(destinationIndex, 0, movedCard);
-      
-      return newColumns;
-    });
-  };
+  const moveCard = useCallback(
+    (
+      sourceColumnId: string,
+      destinationColumnId: string,
+      sourceIndex: number,
+      destinationIndex: number,
+    ) => {
+      setColumns(prevColumns => {
+        // 깊은 복사를 통해 columns 배열과 내부 cards 배열을 모두 새로 생성
+        const newColumns = prevColumns.map(column => ({
+          ...column,
+          cards: [...column.cards],
+        }));
+        
+        // 원본 컬럼 찾기
+        const sourceColumn = newColumns.find(col => col.id === sourceColumnId);
+        if (!sourceColumn) return prevColumns;
+        
+        // 목적지 컬럼 찾기
+        const destinationColumn = newColumns.find(col => col.id === destinationColumnId);
+        if (!destinationColumn) return prevColumns;
+        
+        // 이동할 카드를 복제하여 참조 문제 방지
+        const cardToMove = { ...sourceColumn.cards[sourceIndex] };
+        
+        // 원본에서 카드 제거
+        sourceColumn.cards.splice(sourceIndex, 1);
+        
+        // 목적지에 카드 추가
+        destinationColumn.cards.splice(destinationIndex, 0, cardToMove);
+        
+        return newColumns;
+      });
+    },
+    []
+  );
 
   // 카드에 라벨 추가
   const addLabelToCard = (cardId: string, labelId: number) => {
