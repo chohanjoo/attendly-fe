@@ -8,6 +8,7 @@ import { useKanbanBoard } from '@/hooks/use-kanban-board';
 import { useVillage } from '@/hooks/useVillage';
 import { KanbanColumn } from '@/components/gbs/KanbanColumn';
 import { LabelSelector } from '@/components/gbs/LabelSelector';
+import { LeaderTagSelector } from '@/components/gbs/LeaderTagSelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,6 +23,7 @@ export default function GbsAssignmentPage() {
   const villageId = Number(params.id);
   const { toast } = useToast();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [selectedLeaderIds, setSelectedLeaderIds] = useState<number[]>([]);
   
   // useVillage 훅을 사용하여 마을 정보 로드
   const { village, isLoading: isVillageLoading } = useVillage(villageId);
@@ -46,6 +48,16 @@ export default function GbsAssignmentPage() {
     
     addLabelToCard(selectedCardId, labelId);
     setSelectedCardId(null);
+  };
+
+  // 리더 태그 선택 처리
+  const handleSelectLeaderTag = (leaderId: number) => {
+    // 이미 선택된 리더면 제거, 아니면 추가
+    setSelectedLeaderIds(prev => 
+      prev.includes(leaderId) 
+        ? prev.filter(id => id !== leaderId) 
+        : [...prev, leaderId]
+    );
   };
 
   // 카드 클릭 처리
@@ -112,6 +124,20 @@ export default function GbsAssignmentPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mb-6">
+        <h2 className="text-lg font-medium mb-2">마을 리더 선택</h2>
+        <LeaderTagSelector 
+          labels={labels} 
+          selectedLabelIds={selectedLeaderIds}
+          onSelectLabel={handleSelectLeaderTag} 
+        />
+        {selectedLeaderIds.length > 0 && (
+          <div className="mt-2 text-sm text-gray-600">
+            선택된 리더: {selectedLeaderIds.length}명
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         <div className="w-full md:w-64">
