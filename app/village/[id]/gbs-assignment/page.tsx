@@ -187,6 +187,8 @@ export default function GbsAssignmentPage() {
                   column={column}
                   onMoveCard={moveCard}
                   onRemoveLabel={removeLabelFromCard}
+                  onAddLabel={addLabelToCard}
+                  labels={labels}
                 />
               ))}
             </>

@@ -1,6 +1,7 @@
 import { useDrop } from 'react-dnd';
 import { KanbanCard } from './KanbanCard';
-import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType } from '@/types/kanban';
+import { KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, KanbanLabel } from '@/types/kanban';
+import React from 'react';
 
 interface KanbanColumnProps {
   column: KanbanColumnType;
@@ -11,9 +12,11 @@ interface KanbanColumnProps {
     destIndex: number
   ) => void;
   onRemoveLabel: (cardId: string, labelId: number) => void;
+  onAddLabel: (cardId: string, labelId: number) => void;
+  labels: KanbanLabel[];
 }
 
-export function KanbanColumn({ column, onMoveCard, onRemoveLabel }: KanbanColumnProps) {
+export function KanbanColumn({ column, onMoveCard, onRemoveLabel, onAddLabel, labels }: KanbanColumnProps) {
   const [{ isOver }, drop] = useDrop({
     accept: 'CARD',
     drop: () => ({ name: column.id }),
@@ -44,7 +47,7 @@ export function KanbanColumn({ column, onMoveCard, onRemoveLabel }: KanbanColumn
 
   return (
     <div
-      ref={drop}
+      ref={drop as unknown as React.LegacyRef<HTMLDivElement>}
       className={`flex-1 flex flex-col p-2 rounded-lg bg-gray-100 min-h-[500px] ${
         isOver ? 'border-2 border-blue-400' : ''
       }`}
@@ -64,6 +67,8 @@ export function KanbanColumn({ column, onMoveCard, onRemoveLabel }: KanbanColumn
             index={index}
             columnId={column.id}
             onRemoveLabel={onRemoveLabel}
+            onAddLabel={onAddLabel}
+            labels={labels}
           />
         ))}
         
