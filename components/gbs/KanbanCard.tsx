@@ -66,7 +66,7 @@ export function KanbanCard({
             <DropdownMenuTrigger className="p-1 hover:bg-gray-100 rounded-full">
               <Tag size={14} className="text-gray-500" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="max-h-60 overflow-y-auto">
               {labels.map((label) => (
                 <DropdownMenuItem 
                   key={label.id}

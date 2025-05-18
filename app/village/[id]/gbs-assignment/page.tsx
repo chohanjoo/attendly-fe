@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useKanbanBoard } from '@/hooks/use-kanban-board';
 import { useVillage } from '@/hooks/useVillage';
 import { KanbanColumn } from '@/components/gbs/KanbanColumn';
@@ -13,13 +13,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { Calendar, ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Save, ArrowLeft } from 'lucide-react';
 import { UserVillageResponse } from '@/types/user';
 import { useToast } from '@/components/ui/use-toast';
 import { Input } from '@/components/ui/input';
 
 export default function GbsAssignmentPage() {
   const params = useParams();
+  const router = useRouter();
   const villageId = Number(params.id);
   const { toast } = useToast();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
@@ -72,17 +73,32 @@ export default function GbsAssignmentPage() {
       setSelectedCardId(null);
     }
   };
+  
+  // 마을 상세 페이지로 돌아가기
+  const handleGoBack = () => {
+    router.push(`/village?id=${villageId}`);
+  };
 
   return (
     <div className="container mx-auto py-6">
       <header className="mb-6">
-        {isVillageLoading ? (
-          <Skeleton className="h-10 w-full max-w-md mb-2" />
-        ) : (
-          <h1 className="text-2xl font-bold text-gray-900">
-            {village?.villageName} 마을 GBS 배치
-          </h1>
-        )}
+        <div className="flex items-center gap-2 mb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleGoBack}
+            className="h-8 w-8"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          {isVillageLoading ? (
+            <Skeleton className="h-10 w-full max-w-md" />
+          ) : (
+            <h1 className="text-2xl font-bold text-gray-900">
+              {village?.villageName} 마을 GBS 배치
+            </h1>
+          )}
+        </div>
         <p className="text-gray-600">
           각 조원을 해당 리더에게 배정하세요. 완료 컬럼의 카드만 저장됩니다.
         </p>
@@ -181,16 +197,33 @@ export default function GbsAssignmentPage() {
             </>
           ) : (
             <>
-              {columns.map((column) => (
-                <KanbanColumn
-                  key={column.id}
-                  column={column}
-                  onMoveCard={moveCard}
-                  onRemoveLabel={removeLabelFromCard}
-                  onAddLabel={addLabelToCard}
-                  labels={labels}
-                />
-              ))}
+              {columns.map((column) => {
+                // 필터링된 카드 생성
+                const filteredCards = selectedLeaderIds.length > 0
+                  ? column.cards.filter(card =>
+                      card.labels.some(label =>
+                        selectedLeaderIds.includes(label.leaderId)
+                      )
+                    )
+                  : column.cards;
+                
+                // 필터링된 카드로 새 컬럼 객체 생성
+                const filteredColumn = {
+                  ...column,
+                  cards: filteredCards
+                };
+                
+                return (
+                  <KanbanColumn
+                    key={column.id}
+                    column={filteredColumn}
+                    onMoveCard={moveCard}
+                    onRemoveLabel={removeLabelFromCard}
+                    onAddLabel={addLabelToCard}
+                    labels={labels}
+                  />
+                );
+              })}
             </>
           )}
         </div>

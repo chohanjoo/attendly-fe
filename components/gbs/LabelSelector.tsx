@@ -33,7 +33,7 @@ export function LabelSelector({ labels, onSelectLabel, disabled = false }: Label
           <span>리더 선택</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent className="max-h-60 overflow-y-auto">
         {labels.map((label) => (
           <DropdownMenuItem 
             key={label.id}
