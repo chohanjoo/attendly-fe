@@ -7,7 +7,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useKanbanBoard } from '@/hooks/use-kanban-board';
 import { useVillage } from '@/hooks/useVillage';
 import { KanbanColumn } from '@/components/gbs/KanbanColumn';
-import { LabelSelector } from '@/components/gbs/LabelSelector';
 import { LeaderTagSelector } from '@/components/gbs/LeaderTagSelector';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -157,8 +156,9 @@ export default function GbsAssignmentPage() {
 
       <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         <div className="w-full md:w-64">
-          <LabelSelector 
+          <LeaderTagSelector 
             labels={labels} 
+            selectedLabelIds={[]}
             onSelectLabel={handleSelectLabel} 
             disabled={!selectedCardId}
           />
