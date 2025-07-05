@@ -37,20 +37,32 @@ export const fetchMonthlyAttendance = async (gbsId: number | null): Promise<Mont
       
       // 월간 출석 데이터 구성
       const monthly: MonthlyAttendance[] = Array.from(memberIds).map(memberId => {
-        const attendances = weekStarts.map(week => {
-          const weekData = allAttendances.find(
-            attendances => attendances.find(a => a.weekStart === week && a.memberId === memberId)
-          );
-          
-          const attendance = weekData?.find(a => a.memberId === memberId);
-          
-          return {
-            weekStart: week,
-            worship: attendance?.worship || 'X',
-            qtCount: attendance?.qtCount || 0,
-            ministry: attendance?.ministry || 'C'
-          };
-        });
+        const attendances = weekStarts
+          .map(week => {
+            const weekData = allAttendances.find(
+              attendances => attendances.find(a => a.weekStart === week && a.memberId === memberId)
+            );
+            
+            const attendance = weekData?.find(a => a.memberId === memberId);
+            
+            // 실제 출석 데이터가 있는 주차만 반환
+            if (attendance) {
+              return {
+                weekStart: week,
+                worship: attendance.worship,
+                qtCount: attendance.qtCount,
+                ministry: attendance.ministry
+              };
+            }
+            
+            return null;
+          })
+          .filter(Boolean) as {
+            weekStart: string;
+            worship: 'O' | 'X';
+            qtCount: number;
+            ministry: 'A' | 'B' | 'C';
+          }[];
         
         return {
           memberId,

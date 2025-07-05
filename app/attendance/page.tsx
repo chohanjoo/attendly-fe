@@ -204,6 +204,7 @@ export default function AttendancePage() {
                   <MonthlyAttendanceTable
                     isLoading={isMonthlyLoading}
                     monthlyData={monthlyData}
+                    gbsMembers={gbsMembers}
                     onFetchData={handleFetchMonthlyAttendance}
                   />
                 </TabsContent>
