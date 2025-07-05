@@ -28,6 +28,7 @@ export type UserResponse = {
   email: string
   phoneNumber?: string
   role: string
+  status: "ACTIVE" | "INACTIVE" | "PENDING"
   departmentId: number
   departmentName: string
   birthDate?: string

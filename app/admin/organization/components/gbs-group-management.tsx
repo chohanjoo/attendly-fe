@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, PencilIcon, Trash2, UserPlus } from "lucide-react"
+import { Plus, PencilIcon, Trash2, UserPlus, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -41,74 +41,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
-
-// GBS 그룹 타입 정의
-interface GbsGroup {
-  id: number
-  name: string
-  villageId: number
-  villageName: string
-  termStartDate: string
-  termEndDate: string
-  leaderId?: number
-  leaderName?: string
-  createdAt: string
-  updatedAt: string
-  memberCount: number
-}
-
-// GBS 그룹 멤버 타입 정의
-interface GbsMember {
-  id: number
-  userId: number
-  userName: string
-  gbsGroupId: number
-  startDate: string
-  endDate?: string
-}
-
-// 마을 타입 정의
-interface Village {
-  id: number
-  name: string
-}
-
-// 사용자 타입 정의
-interface User {
-  id: number
-  name: string
-  role: string
-}
-
-// API 응답 타입 정의
-interface ApiResponse<T> {
-  success: boolean
-  timestamp: string
-  data: T
-  message: string
-  code: number
-}
-
-interface PageResponse<T> {
-  items: T[]
-  totalCount: number
-  hasMore: boolean
-}
-
-// API 엔드포인트
-const API_ENDPOINTS = {
-  GBS_GROUPS: "/api/admin/organization/gbs-groups",
-  VILLAGES: "/api/admin/organization/villages",
-  USERS: "/api/admin/users",
-}
+import { useGbsGroups, type GbsGroup } from "@/hooks/use-gbs-groups"
 
 export function GbsGroupManagement() {
-  const { toast } = useToast()
-  const [gbsGroups, setGbsGroups] = useState<GbsGroup[]>([])
-  const [villages, setVillages] = useState<Village[]>([])
-  const [users, setUsers] = useState<User[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const {
+    gbsGroups,
+    villages,
+    users,
+    groupMembers,
+    isLoading,
+    pagination,
+    fetchGroupMembers,
+    loadAllData,
+    createGbsGroup,
+    updateGbsGroup,
+    deleteGbsGroup,
+    assignLeader,
+    removeLeader
+  } = useGbsGroups()
+
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedVillage, setSelectedVillage] = useState<string>("all")
   
@@ -137,99 +88,10 @@ export function GbsGroupManagement() {
   const [leaderGbs, setLeaderGbs] = useState<GbsGroup | null>(null)
   const [newLeaderId, setNewLeaderId] = useState<string>("")
 
-  // GBS 그룹 멤버 데이터 상태
-  const [groupMembers, setGroupMembers] = useState<{ [key: number]: GbsMember[] }>({})
-  
-  // GBS 그룹 목록 가져오기
-  const fetchGbsGroups = async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.GBS_GROUPS)
-      if (!response.ok) throw new Error('GBS 그룹 데이터를 불러오는데 실패했습니다.')
-      
-      const data: ApiResponse<PageResponse<GbsGroup>> = await response.json()
-      setGbsGroups(data.data.items)
-    } catch (error) {
-      console.error('GBS 그룹 데이터 로딩 실패:', error)
-      toast({
-        title: '오류',
-        description: '데이터를 불러오는데 실패했습니다.',
-        variant: 'destructive',
-      })
-    }
-  }
-  
-  // 마을 목록 가져오기
-  const fetchVillages = async () => {
-    try {
-      const response = await fetch(API_ENDPOINTS.VILLAGES)
-      if (!response.ok) throw new Error('마을 데이터를 불러오는데 실패했습니다.')
-      
-      const data: ApiResponse<PageResponse<Village>> = await response.json()
-      setVillages(data.data.items)
-    } catch (error) {
-      console.error('마을 데이터 로딩 실패:', error)
-      toast({
-        title: '오류',
-        description: '마을 데이터를 불러오는데 실패했습니다.',
-        variant: 'destructive',
-      })
-    }
-  }
-  
-  // 리더 사용자 목록 가져오기
-  const fetchLeaders = async () => {
-    try {
-      const response = await fetch(`${API_ENDPOINTS.USERS}?roles=LEADER`)
-      if (!response.ok) throw new Error('리더 데이터를 불러오는데 실패했습니다.')
-      
-      const data: ApiResponse<PageResponse<User>> = await response.json()
-      setUsers(data.data.items)
-    } catch (error) {
-      console.error('리더 데이터 로딩 실패:', error)
-      toast({
-        title: '오류',
-        description: '리더 데이터를 불러오는데 실패했습니다.',
-        variant: 'destructive',
-      })
-    }
-  }
-  
-  // GBS 그룹 멤버 가져오기
-  const fetchGroupMembers = async (groupId: number) => {
-    try {
-      const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${groupId}/members`)
-      if (!response.ok) throw new Error('GBS 그룹 멤버 데이터를 불러오는데 실패했습니다.')
-      
-      const data: ApiResponse<GbsMember[]> = await response.json()
-      setGroupMembers(prev => ({
-        ...prev,
-        [groupId]: data.data
-      }))
-    } catch (error) {
-      console.error(`그룹 ${groupId}의 멤버 데이터 로딩 실패:`, error)
-      // 실패해도 UI에는 영향이 없으므로 토스트 표시하지 않음
-    }
-  }
-  
-  // 모든 데이터 로딩
-  const loadAllData = async () => {
-    setIsLoading(true)
-    try {
-      await Promise.all([
-        fetchGbsGroups(),
-        fetchVillages(),
-        fetchLeaders()
-      ])
-      setIsLoading(false)
-    } catch (error) {
-      console.error('데이터 로딩 실패:', error)
-      setIsLoading(false)
-    }
-  }
-  
+  // 초기 데이터 로딩
   useEffect(() => {
-    loadAllData()
-  }, [])
+    loadAllData(0, 20)
+  }, [loadAllData])
   
   // GBS 그룹 로드 후 각 그룹의 멤버 데이터도 로드
   useEffect(() => {
@@ -238,7 +100,19 @@ export function GbsGroupManagement() {
         fetchGroupMembers(group.id)
       })
     }
-  }, [gbsGroups])
+  }, [gbsGroups, fetchGroupMembers])
+
+  // 페이지 변경 핸들러
+  const handlePageChange = async (newPage: number) => {
+    if (newPage >= 0 && (pagination.hasMore || newPage < Math.ceil(pagination.totalCount / pagination.size))) {
+      await loadAllData(newPage, pagination.size)
+    }
+  }
+
+  // 페이지 크기 변경 핸들러
+  const handlePageSizeChange = async (newSize: number) => {
+    await loadAllData(0, newSize)
+  }
 
   // GBS 그룹 목록 필터링
   const filteredGbsGroups = gbsGroups.filter((group) => {
@@ -257,59 +131,28 @@ export function GbsGroupManagement() {
   // GBS 그룹 추가
   const handleAddGbs = async () => {
     if (!newGbsName.trim()) {
-      toast({
-        title: "오류",
-        description: "GBS 그룹 이름을 입력해주세요.",
-        variant: "destructive",
-      })
       return
     }
 
     if (!newGbsVillageId) {
-      toast({
-        title: "오류",
-        description: "소속 마을을 선택해주세요.",
-        variant: "destructive",
-      })
       return
     }
 
     if (!newGbsTermStart || !newGbsTermEnd) {
-      toast({
-        title: "오류",
-        description: "활동 기간을 모두 설정해주세요.",
-        variant: "destructive",
-      })
       return
     }
 
-    const requestBody = {
+    const requestData = {
       name: newGbsName,
       villageId: parseInt(newGbsVillageId),
       termStartDate: newGbsTermStart,
       termEndDate: newGbsTermEnd,
-    }
-
-    if (newGbsLeaderId) {
-      // @ts-ignore: leaderId 필드는 옵셔널이지만 API는 지원함
-      requestBody.leaderId = parseInt(newGbsLeaderId)
+      ...(newGbsLeaderId && { leaderId: parseInt(newGbsLeaderId) })
     }
 
     try {
-      setIsLoading(true)
-      const response = await fetch(API_ENDPOINTS.GBS_GROUPS, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      })
-
-      if (!response.ok) throw new Error('GBS 그룹 추가에 실패했습니다.')
+      await createGbsGroup(requestData)
       
-      // 전체 데이터 새로고침
-      await loadAllData()
-
       // 폼 초기화
       setNewGbsName("")
       setNewGbsVillageId("")
@@ -317,20 +160,8 @@ export function GbsGroupManagement() {
       setNewGbsTermEnd("")
       setNewGbsLeaderId("")
       setIsAddDialogOpen(false)
-      
-      toast({
-        title: "GBS 그룹 추가 완료",
-        description: `${newGbsName} 그룹이 추가되었습니다.`,
-      })
     } catch (error) {
-      console.error('GBS 그룹 추가 실패:', error)
-      toast({
-        title: "오류",
-        description: "GBS 그룹 추가에 실패했습니다.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+      // 에러는 훅에서 처리됨
     }
   }
 
@@ -349,33 +180,18 @@ export function GbsGroupManagement() {
     if (!editGbs) return
     
     if (!editGbsName.trim()) {
-      toast({
-        title: "오류",
-        description: "GBS 그룹 이름을 입력해주세요.",
-        variant: "destructive",
-      })
       return
     }
 
     if (!editGbsVillageId) {
-      toast({
-        title: "오류",
-        description: "소속 마을을 선택해주세요.",
-        variant: "destructive",
-      })
       return
     }
 
     if (!editGbsTermStart || !editGbsTermEnd) {
-      toast({
-        title: "오류",
-        description: "활동 기간을 모두 설정해주세요.",
-        variant: "destructive",
-      })
       return
     }
 
-    const requestBody = {
+    const requestData = {
       name: editGbsName,
       villageId: parseInt(editGbsVillageId),
       termStartDate: editGbsTermStart,
@@ -383,64 +199,19 @@ export function GbsGroupManagement() {
     }
 
     try {
-      setIsLoading(true)
-      const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${editGbs.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      })
-
-      if (!response.ok) throw new Error('GBS 그룹 수정에 실패했습니다.')
-      
-      // 전체 데이터 새로고침
-      await loadAllData()
-      
+      await updateGbsGroup(editGbs.id, requestData)
       setIsEditDialogOpen(false)
-      
-      toast({
-        title: "GBS 그룹 수정 완료",
-        description: `GBS 그룹 정보가 수정되었습니다.`,
-      })
     } catch (error) {
-      console.error('GBS 그룹 수정 실패:', error)
-      toast({
-        title: "오류",
-        description: "GBS 그룹 수정에 실패했습니다.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+      // 에러는 훅에서 처리됨
     }
   }
 
   // GBS 그룹 삭제
   const handleDeleteGbs = async (id: number) => {
     try {
-      setIsLoading(true)
-      const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) throw new Error('GBS 그룹 삭제에 실패했습니다.')
-      
-      // 전체 데이터 새로고침
-      await loadAllData()
-      
-      toast({
-        title: "GBS 그룹 삭제 완료",
-        description: "GBS 그룹이 삭제되었습니다.",
-      })
+      await deleteGbsGroup(id)
     } catch (error) {
-      console.error('GBS 그룹 삭제 실패:', error)
-      toast({
-        title: "오류",
-        description: "GBS 그룹 삭제에 실패했습니다.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+      // 에러는 훅에서 처리됨
     }
   }
 
@@ -451,67 +222,25 @@ export function GbsGroupManagement() {
     setIsLeaderDialogOpen(true)
   }
 
-  // GBS 리더 지정
+  // GBS 리더 지정/해제
   const handleAssignLeader = async () => {
     if (!leaderGbs) return
     
     try {
-      setIsLoading(true)
-      
       if (!newLeaderId) {
-        // 리더 해제 - 리더 해제 API 호출
-        const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${leaderGbs.id}/leaders`, {
-          method: 'DELETE',
+        // 리더 해제
+        await removeLeader(leaderGbs.id)
+      } else {
+        // 리더 지정
+        await assignLeader(leaderGbs.id, {
+          leaderId: parseInt(newLeaderId),
+          startDate: new Date().toISOString().split('T')[0], // 현재 날짜
         })
-        
-        if (!response.ok) throw new Error('리더 해제에 실패했습니다.')
-        
-        await loadAllData()
-        setIsLeaderDialogOpen(false)
-        
-        toast({
-          title: "리더 해제 완료",
-          description: `리더가 해제되었습니다.`,
-        })
-        return
       }
-      
-      // 리더 지정
-      const requestBody = {
-        leaderId: parseInt(newLeaderId),
-        startDate: new Date().toISOString().split('T')[0], // 현재 날짜
-      }
-      
-      const response = await fetch(`${API_ENDPOINTS.GBS_GROUPS}/${leaderGbs.id}/leaders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      })
-      
-      if (!response.ok) throw new Error('리더 지정에 실패했습니다.')
-      
-      // 데이터 갱신
-      await loadAllData()
-      
-      const userName = users.find(u => u.id === parseInt(newLeaderId))?.name || "선택된 사용자"
       
       setIsLeaderDialogOpen(false)
-      
-      toast({
-        title: "리더 지정 완료",
-        description: `${userName}님이 ${leaderGbs.name}의 리더로 지정되었습니다.`,
-      })
     } catch (error) {
-      console.error('리더 지정/해제 실패:', error)
-      toast({
-        title: "오류",
-        description: "리더 지정/해제에 실패했습니다.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+      // 에러는 훅에서 처리됨
     }
   }
 
@@ -689,7 +418,7 @@ export function GbsGroupManagement() {
                           setSelectedGroup(group)
                           setIsMembersDialogOpen(true)
                         }}>
-                        {groupMembers[group.id].slice(0, 3).map(member => member.userName).join(', ')}
+                        {groupMembers[group.id].slice(0, 3).map(member => member.name).join(', ')}
                         {groupMembers[group.id].length > 3 && ` 외 ${groupMembers[group.id].length - 3}명`}
                       </div>
                     )}
@@ -748,6 +477,84 @@ export function GbsGroupManagement() {
               ))}
             </TableBody>
           </Table>
+        )}
+
+        {/* 페이지네이션 */}
+        {!isLoading && gbsGroups.length > 0 && (
+          <div className="flex items-center justify-between px-2 py-4">
+            {/* 왼쪽: 결과 정보 */}
+            <div className="flex items-center space-x-6 lg:space-x-8">
+              <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium">페이지당 행 수</p>
+                <Select
+                  value={pagination.size.toString()}
+                  onValueChange={(value) => handlePageSizeChange(parseInt(value))}
+                >
+                  <SelectTrigger className="h-8 w-[70px]">
+                    <SelectValue placeholder={pagination.size.toString()} />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {[10, 20, 50, 100].map((pageSize) => (
+                      <SelectItem key={pageSize} value={pageSize.toString()}>
+                        {pageSize}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                총 {pagination.totalCount}개 중 {Math.min(pagination.page * pagination.size + 1, pagination.totalCount)}-
+                {Math.min((pagination.page + 1) * pagination.size, pagination.totalCount)}개 표시
+              </div>
+            </div>
+
+            {/* 오른쪽: 페이지 네비게이션 */}
+            <div className="flex items-center space-x-2">
+              <div className="text-sm font-medium">
+                페이지 {pagination.page + 1} / {Math.max(1, Math.ceil(pagination.totalCount / pagination.size))}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => handlePageChange(0)}
+                  disabled={pagination.page === 0}
+                >
+                  <span className="sr-only">첫 페이지로</span>
+                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4 -ml-2" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 0}
+                >
+                  <span className="sr-only">이전 페이지</span>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={!pagination.hasMore && pagination.page >= Math.ceil(pagination.totalCount / pagination.size) - 1}
+                >
+                  <span className="sr-only">다음 페이지</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0"
+                  onClick={() => handlePageChange(Math.ceil(pagination.totalCount / pagination.size) - 1)}
+                  disabled={!pagination.hasMore && pagination.page >= Math.ceil(pagination.totalCount / pagination.size) - 1}
+                >
+                  <span className="sr-only">마지막 페이지로</span>
+                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 -ml-2" />
+                </Button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* GBS 그룹 수정 다이얼로그 */}
@@ -828,7 +635,7 @@ export function GbsGroupManagement() {
             <DialogHeader>
               <DialogTitle>GBS 리더 지정</DialogTitle>
               <DialogDescription>
-                {leaderGbs?.name} 그룹의, 리더를 지정합니다.
+                {leaderGbs?.name} 그룹의 리더를 지정합니다.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -875,19 +682,17 @@ export function GbsGroupManagement() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>이름</TableHead>
-                      <TableHead>시작일</TableHead>
-                      <TableHead>종료일</TableHead>
+                      <TableHead>생년월일</TableHead>
+                      <TableHead>연락처</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {groupMembers[selectedGroup.id].map((member) => (
                       <TableRow key={member.id}>
-                        <TableCell className="font-medium">{member.userName}</TableCell>
-                        <TableCell>{new Date(member.startDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          {member.endDate ? new Date(member.endDate).toLocaleDateString() : 
-                            <span className="text-muted-foreground">미설정</span>}
-                        </TableCell>
+                        <TableCell className="font-medium">{member.name}</TableCell>
+                        <TableCell>{member.birthDate ? new Date(member.birthDate).toLocaleDateString() : 
+                            <span className="text-muted-foreground">미설정</span>}</TableCell>
+                        <TableCell>{member.phoneNumber}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
