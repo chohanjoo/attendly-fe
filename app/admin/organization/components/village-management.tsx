@@ -105,17 +105,23 @@ export function VillageManagement() {
 
   // 데이터 가져오기
   const { data: villagesData, isLoading: isVillagesLoading } = useVillages(departmentFilter)
-  const { data: departmentsData } = useDepartments()
-  const { data: usersData } = useUsers(0, 100, "", newVillageDepartmentId ? parseInt(newVillageDepartmentId) : undefined, newVillageDepartmentId ? ["LEADER"] : undefined)
+  const { data: departmentsData } = useDepartments(isAddDialogOpen || isEditDialogOpen)
+  const { data: usersData } = useUsers(
+    0, 
+    100, 
+    newLeaderSearchTerm, 
+    newVillageDepartmentId ? parseInt(newVillageDepartmentId) : undefined, 
+    newVillageDepartmentId ? ["VILLAGE_LEADER"] : undefined
+  )
   const { data: leaderUsersData } = useUsers(
     0, 
     100, 
-    "", 
+    leaderSearchTerm, 
     leaderVillageId ? 
       // 마을 데이터에서 부서 ID 찾기
       villagesData?.items.find(v => v.id === leaderVillageId)?.departmentId : 
       undefined, 
-    leaderVillageId ? ["LEADER"] : undefined
+    leaderVillageId ? ["VILLAGE_LEADER"] : undefined
   )
 
   // 마을 목록 필터링
@@ -343,7 +349,7 @@ export function VillageManagement() {
                       onChange={e => setNewLeaderSearchTerm(e.target.value)}
                       disabled={!newVillageDepartmentId}
                     />
-                    {newVillageDepartmentId && newLeaderSearchTerm && (
+                    {newVillageDepartmentId && (
                       <div className="border rounded-md max-h-40 overflow-y-auto">
                         <div 
                           className="p-2 hover:bg-accent cursor-pointer"
@@ -354,22 +360,23 @@ export function VillageManagement() {
                         >
                           미지정
                         </div>
-                        {usersData?.items
-                          .filter((user: UserResponse) => 
-                            user.name.toLowerCase().includes(newLeaderSearchTerm.toLowerCase()))
-                          .map((user: UserResponse) => (
-                            <div 
-                              key={user.id} 
-                              className="p-2 hover:bg-accent cursor-pointer"
-                              onClick={() => {
-                                setNewVillageLeaderId(user.id.toString());
-                                setNewLeaderSearchTerm(user.name);
-                              }}
-                            >
-                              {user.name}
-                            </div>
-                          ))
-                        }
+                        {usersData?.items.map((user: UserResponse) => (
+                          <div 
+                            key={user.id} 
+                            className="p-2 hover:bg-accent cursor-pointer"
+                            onClick={() => {
+                              setNewVillageLeaderId(user.id.toString());
+                              setNewLeaderSearchTerm(user.name);
+                            }}
+                          >
+                            {user.name}
+                          </div>
+                        ))}
+                        {usersData?.items.length === 0 && newLeaderSearchTerm && (
+                          <div className="p-2 text-muted-foreground text-center">
+                            검색 결과가 없습니다.
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -542,13 +549,12 @@ export function VillageManagement() {
                 <Label htmlFor="leader" className="text-right">
                   마을장
                 </Label>
-                <div className="col-span-3 space-y-2">
-                  <Input
-                    placeholder="마을장 이름 검색"
-                    value={leaderSearchTerm}
-                    onChange={e => setLeaderSearchTerm(e.target.value)}
-                  />
-                  {leaderSearchTerm && (
+                                  <div className="col-span-3 space-y-2">
+                    <Input
+                      placeholder="마을장 이름 검색"
+                      value={leaderSearchTerm}
+                      onChange={e => setLeaderSearchTerm(e.target.value)}
+                    />
                     <div className="border rounded-md max-h-40 overflow-y-auto">
                       <div 
                         className="p-2 hover:bg-accent cursor-pointer"
@@ -559,25 +565,25 @@ export function VillageManagement() {
                       >
                         마을장 해제
                       </div>
-                      {leaderUsersData?.items
-                        .filter((user: UserResponse) => 
-                          user.name.toLowerCase().includes(leaderSearchTerm.toLowerCase()))
-                        .map((user: UserResponse) => (
-                          <div 
-                            key={user.id} 
-                            className="p-2 hover:bg-accent cursor-pointer"
-                            onClick={() => {
-                              setNewLeaderId(user.id.toString());
-                              setLeaderSearchTerm(user.name);
-                            }}
-                          >
-                            {user.name}
-                          </div>
-                        ))
-                      }
+                      {leaderUsersData?.items.map((user: UserResponse) => (
+                        <div 
+                          key={user.id} 
+                          className="p-2 hover:bg-accent cursor-pointer"
+                          onClick={() => {
+                            setNewLeaderId(user.id.toString());
+                            setLeaderSearchTerm(user.name);
+                          }}
+                        >
+                          {user.name}
+                        </div>
+                      ))}
+                      {leaderUsersData?.items.length === 0 && leaderSearchTerm && (
+                        <div className="p-2 text-muted-foreground text-center">
+                          검색 결과가 없습니다.
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
               </div>
             </div>
             <DialogFooter>

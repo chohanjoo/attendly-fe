@@ -15,12 +15,13 @@ export type DepartmentResponse = {
   hasMore: boolean;
 };
 
-export const useDepartments = () => {
+export const useDepartments = (enabled: boolean = true) => {
   return useQuery({
     queryKey: ["admin", "departments"],
     queryFn: async () => {
       const response = await api.get<ApiResponse<DepartmentResponse>>("/api/admin/organization/departments");
       return response.data.data;
     },
+    enabled: enabled,
   });
 }; 
